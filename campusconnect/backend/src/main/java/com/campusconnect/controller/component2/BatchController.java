@@ -1,0 +1,42 @@
+package com.campusconnect.controller.component2;
+
+import com.campusconnect.dto.component2.BatchDtos;
+import com.campusconnect.service.component2.BatchService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/component2/batches")
+@RequiredArgsConstructor
+public class BatchController {
+    private final BatchService batchService;
+
+    @PostMapping
+    public BatchDtos.Response create(@Valid @RequestBody BatchDtos.Request request) {
+        return batchService.create(request);
+    }
+
+    @PutMapping("/{batchId}")
+    public BatchDtos.Response update(@PathVariable Long batchId, @Valid @RequestBody BatchDtos.Request request) {
+        return batchService.update(batchId, request);
+    }
+
+    @GetMapping("/{batchId}")
+    public BatchDtos.Response getById(@PathVariable Long batchId) {
+        return batchService.getById(batchId);
+    }
+
+    @GetMapping
+    public List<BatchDtos.Response> getAll() {
+        return batchService.getAll();
+    }
+
+    @DeleteMapping("/{batchId}")
+    public void delete(@PathVariable Long batchId) {
+        batchService.delete(batchId);
+    }
+}
+

@@ -1,0 +1,68 @@
+package com.campusconnect.service.component2.impl;
+
+import com.campusconnect.dto.component2.CampusDtos;
+import com.campusconnect.entity.component2.Campus;
+import com.campusconnect.repository.component2.CampusRepository;
+import com.campusconnect.service.component2.CampusService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class CampusServiceImpl implements CampusService {
+    private final CampusRepository campusRepository;
+
+    @Override
+    public CampusDtos.Response create(CampusDtos.Request request) {
+        Campus campus = new Campus();
+        campus.setCampusName(request.campusName());
+        campus.setLocation(request.location());
+        campus.setStatus(request.status());
+        return toResponse(campusRepository.save(campus));
+    }
+
+    @Override
+    public CampusDtos.Response update(Long campusId, CampusDtos.Request request) {
+        Campus campus = campusRepository.findById(campusId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Campus not found: " + campusId));
+
+        campus.setCampusName(request.campusName());
+        campus.setLocation(request.location());
+        campus.setStatus(request.status());
+        return toResponse(campusRepository.save(campus));
+    }
+
+    @Override
+    public CampusDtos.Response getById(Long campusId) {
+        return campusRepository.findById(campusId)
+                .map(this::toResponse)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Campus not found: " + campusId));
+    }
+
+    @Override
+    public List<CampusDtos.Response> getAll() {
+        return campusRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
+    @Override
+    public void delete(Long campusId) {
+        if (!campusRepository.existsById(campusId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Campus not found: " + campusId);
+        }
+        campusRepository.deleteById(campusId);
+    }
+
+    private CampusDtos.Response toResponse(Campus campus) {
+        return new CampusDtos.Response(
+                campus.getCampusId(),
+                campus.getCampusName(),
+                campus.getLocation(),
+                campus.getStatus()
+        );
+    }
+}
+
