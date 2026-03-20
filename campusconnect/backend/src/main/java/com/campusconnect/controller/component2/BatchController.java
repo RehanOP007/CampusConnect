@@ -9,33 +9,36 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/component2/batches")
+@RequestMapping("/api/batches")
 @RequiredArgsConstructor
 public class BatchController {
+
     private final BatchService batchService;
 
-    @PostMapping
+    @PostMapping("/create")
     public BatchDtos.Response create(@Valid @RequestBody BatchDtos.Request request) {
         return batchService.create(request);
     }
 
-    @PutMapping("/{batchId}")
-    public BatchDtos.Response update(@PathVariable Long batchId, @Valid @RequestBody BatchDtos.Request request) {
+    @PutMapping("/update")
+    public BatchDtos.Response update(
+            @RequestParam Long batchId,
+            @Valid @RequestBody BatchDtos.Request request) {
         return batchService.update(batchId, request);
     }
 
-    @GetMapping("/{batchId}")
-    public BatchDtos.Response getById(@PathVariable Long batchId) {
+    @GetMapping("/get")
+    public BatchDtos.Response getById(@RequestParam Long batchId) {
         return batchService.getById(batchId);
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public List<BatchDtos.Response> getAll() {
         return batchService.getAll();
     }
 
-    @DeleteMapping("/{batchId}")
-    public void delete(@PathVariable Long batchId) {
+    @DeleteMapping("/delete")
+    public void delete(@RequestParam Long batchId) {
         batchService.delete(batchId);
     }
 }

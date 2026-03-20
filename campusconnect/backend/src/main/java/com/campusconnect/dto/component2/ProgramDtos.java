@@ -10,18 +10,19 @@ public final class ProgramDtos {
 
     public record Request(
             @NotBlank String programName,
-            @NotBlank String facultyName,
             @NotNull @Min(1) Integer durationYears,
-            @NotBlank String status
+            @NotBlank String status,
+            Long facultyId 
     ) {
     }
 
     public record Response(
             Long programId,
             String programName,
-            String facultyName,
             Integer durationYears,
-            String status
+            String status,
+            Long facultyId,
+            String facultyName
     ) {
     }
 }

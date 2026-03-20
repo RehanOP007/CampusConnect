@@ -9,11 +9,19 @@ public final class CurriculumDtos {
     }
 
     public record Request(
-            @NotBlank String curriculumName,
-            @NotBlank String version,
-            @NotNull @Min(1900) Integer createdYear,
-            @NotBlank String status,
-            @NotNull Long programId
+            @NotBlank 
+            String curriculumName,
+
+            @NotBlank 
+            String version,
+
+            @NotNull @Min(1900) 
+            Integer createdYear,
+            
+            @NotBlank 
+            String status,
+            
+            Long programId
     ) {
     }
 

@@ -1,7 +1,9 @@
 package com.campusconnect.service.component2.impl;
 
 import com.campusconnect.dto.component2.ProgramDtos;
+import com.campusconnect.entity.component2.Faculty;
 import com.campusconnect.entity.component2.Program;
+import com.campusconnect.repository.component2.FacultyRepository;
 import com.campusconnect.repository.component2.ProgramRepository;
 import com.campusconnect.service.component2.ProgramService;
 import lombok.RequiredArgsConstructor;
@@ -15,29 +17,42 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProgramServiceImpl implements ProgramService {
     private final ProgramRepository programRepository;
+    private final FacultyRepository facultyRepository;
 
     @Override
     public ProgramDtos.Response create(ProgramDtos.Request request) {
+
+        Faculty faculty = facultyRepository.findById(request.facultyId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Faculty not found: " + request.facultyId()));
+
         Program program = new Program();
         program.setProgramName(request.programName());
-        program.setFacultyName(request.facultyName());
         program.setDurationYears(request.durationYears());
         program.setStatus(request.status());
+        program.setFaculty(faculty); // ✅ important
+
         return toResponse(programRepository.save(program));
     }
 
     @Override
     public ProgramDtos.Response update(Long programId, ProgramDtos.Request request) {
+
         Program program = programRepository.findById(programId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Program not found: " + programId));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Program not found: " + programId));
+
+        Faculty faculty = facultyRepository.findById(request.facultyId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Faculty not found: " + request.facultyId()));
 
         program.setProgramName(request.programName());
-        program.setFacultyName(request.facultyName());
         program.setDurationYears(request.durationYears());
         program.setStatus(request.status());
+        program.setFaculty(faculty); // ✅ important
+
         return toResponse(programRepository.save(program));
     }
-
     @Override
     public ProgramDtos.Response getById(Long programId) {
         return programRepository.findById(programId)
@@ -62,9 +77,10 @@ public class ProgramServiceImpl implements ProgramService {
         return new ProgramDtos.Response(
                 program.getProgramId(),
                 program.getProgramName(),
-                program.getFacultyName(),
                 program.getDurationYears(),
-                program.getStatus()
+                program.getStatus(),
+                program.getFaculty() == null ? null : program.getFaculty().getFacultyId(),
+                program.getFaculty() == null ? null : program.getFaculty().getFacultyName()
         );
     }
 }

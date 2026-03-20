@@ -4,38 +4,48 @@ import com.campusconnect.dto.component2.ProgramDtos;
 import com.campusconnect.service.component2.ProgramService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/component2/programs")
+@RequestMapping("/api/programs")
 @RequiredArgsConstructor
 public class ProgramController {
+
     private final ProgramService programService;
 
-    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/create")
     public ProgramDtos.Response create(@Valid @RequestBody ProgramDtos.Request request) {
         return programService.create(request);
     }
 
-    @PutMapping("/{programId}")
-    public ProgramDtos.Response update(@PathVariable Long programId, @Valid @RequestBody ProgramDtos.Request request) {
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/update")
+    public ProgramDtos.Response update(
+            @RequestParam Long programId,
+            @Valid @RequestBody ProgramDtos.Request request) {
         return programService.update(programId, request);
     }
 
-    @GetMapping("/{programId}")
-    public ProgramDtos.Response getById(@PathVariable Long programId) {
+    // changed here
+    @GetMapping("/get")
+    public ProgramDtos.Response getById(@RequestParam Long programId) {
         return programService.getById(programId);
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public List<ProgramDtos.Response> getAll() {
         return programService.getAll();
     }
 
-    @DeleteMapping("/{programId}")
-    public void delete(@PathVariable Long programId) {
+    // changed here
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/delete")
+    public void delete(@RequestParam Long programId) {
         programService.delete(programId);
     }
 }

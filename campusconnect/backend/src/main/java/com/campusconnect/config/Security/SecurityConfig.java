@@ -23,6 +23,8 @@ public SecurityFilterChain filterChain(HttpSecurity http, JWTAuthenticationFilte
         .csrf(csrf -> csrf.disable())        
         .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/users/create").permitAll()
                 .anyRequest().authenticated()
         )
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

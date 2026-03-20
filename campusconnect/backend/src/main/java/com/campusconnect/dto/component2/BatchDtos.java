@@ -13,15 +13,24 @@ public final class BatchDtos {
 
     public record Request(
             @NotNull @Min(1900) @Max(2500) Integer intakeYear,
-            @NotBlank String intakeMonth,
-            @NotBlank String status,
-            @NotNull Long campusId,
-            @NotNull Long curriculumId
+
+            @NotBlank 
+            String intakeMonth,
+
+            @NotBlank
+            String batchName,
+
+            @NotBlank 
+            String status,
+ 
+            Long campusId,
+            Long curriculumId
     ) {
     }
 
     public record Response(
             Long batchId,
+            String batchName,
             Integer intakeYear,
             String intakeMonth,
             String status,

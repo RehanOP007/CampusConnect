@@ -17,24 +17,43 @@ public class CampusServiceImpl implements CampusService {
     private final CampusRepository campusRepository;
 
     @Override
-    public CampusDtos.Response create(CampusDtos.Request request) {
-        Campus campus = new Campus();
-        campus.setCampusName(request.campusName());
-        campus.setLocation(request.location());
-        campus.setStatus(request.status());
-        return toResponse(campusRepository.save(campus));
+public CampusDtos.Response create(CampusDtos.Request request) {
+    // Check if a campus with the same name already exists
+    if (campusRepository.existsByCampusName(request.campusName())) {
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Campus with name '" + request.campusName() + "' already exists"
+        );
     }
+
+    Campus campus = new Campus();
+    campus.setCampusName(request.campusName());
+    campus.setLocation(request.location());
+    campus.setStatus(request.status());
+    return toResponse(campusRepository.save(campus));
+}
 
     @Override
-    public CampusDtos.Response update(Long campusId, CampusDtos.Request request) {
-        Campus campus = campusRepository.findById(campusId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Campus not found: " + campusId));
+public CampusDtos.Response update(Long campusId, CampusDtos.Request request) {
+    Campus campus = campusRepository.findById(campusId)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Campus not found: " + campusId
+            ));
 
-        campus.setCampusName(request.campusName());
-        campus.setLocation(request.location());
-        campus.setStatus(request.status());
-        return toResponse(campusRepository.save(campus));
+    // Check for duplicate name if changing the name
+    if (!campus.getCampusName().equals(request.campusName())
+            && campusRepository.existsByCampusName(request.campusName())) {
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Campus with name '" + request.campusName() + "' already exists"
+        );
     }
+
+    campus.setCampusName(request.campusName());
+    campus.setLocation(request.location());
+    campus.setStatus(request.status());
+    return toResponse(campusRepository.save(campus));
+}
 
     @Override
     public CampusDtos.Response getById(Long campusId) {

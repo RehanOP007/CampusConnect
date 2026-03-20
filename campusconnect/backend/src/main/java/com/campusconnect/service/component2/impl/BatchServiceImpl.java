@@ -28,12 +28,20 @@ public class BatchServiceImpl implements BatchService {
         Campus campus = campusRepository.findById(request.campusId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Campus not found: " + request.campusId()));
 
-        Curriculum curriculum = curriculumRepository.findById(request.curriculumId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curriculum not found: " + request.curriculumId()));
+        Curriculum curriculum = null;
+
+        if (request.curriculumId() != null) {
+            curriculum = curriculumRepository.findById(request.curriculumId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, 
+                            "Curriculum not found: " + request.curriculumId()
+                    ));
+        }
 
         Batch batch = new Batch();
         batch.setIntakeYear(request.intakeYear());
         batch.setIntakeMonth(request.intakeMonth());
+        batch.setBatchName(request.batchName());
         batch.setStatus(request.status());
         batch.setCampus(campus);
         batch.setCurriculum(curriculum);
@@ -49,8 +57,15 @@ public class BatchServiceImpl implements BatchService {
         Campus campus = campusRepository.findById(request.campusId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Campus not found: " + request.campusId()));
 
-        Curriculum curriculum = curriculumRepository.findById(request.curriculumId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curriculum not found: " + request.curriculumId()));
+        Curriculum curriculum = null;
+
+        if (request.curriculumId() != null) {
+            curriculum = curriculumRepository.findById(request.curriculumId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Curriculum not found: " + request.curriculumId()
+                    ));
+        }
 
         batch.setIntakeYear(request.intakeYear());
         batch.setIntakeMonth(request.intakeMonth());
@@ -83,6 +98,7 @@ public class BatchServiceImpl implements BatchService {
     private BatchDtos.Response toResponse(Batch batch) {
         return new BatchDtos.Response(
                 batch.getBatchId(),
+                batch.getBatchName(),
                 batch.getIntakeYear(),
                 batch.getIntakeMonth(),
                 batch.getStatus(),

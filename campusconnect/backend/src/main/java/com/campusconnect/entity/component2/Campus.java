@@ -16,5 +16,7 @@ public class Campus {
 
     private String location;
 
+    private String mailDomain;
+
     private String status;
 }

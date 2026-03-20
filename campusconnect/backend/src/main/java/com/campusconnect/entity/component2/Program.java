@@ -14,9 +14,13 @@ public class Program {
 
     private String programName;
 
-    private String facultyName;
-
     private Integer durationYears;
 
     private String status;
+
+    @ManyToOne
+    @JoinColumn(name = "faculty_id")
+    private Faculty faculty;
+
+
 }

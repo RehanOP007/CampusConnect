@@ -11,13 +11,30 @@ public final class UserDtos {
     }
 
     public record Request(
-            @NotBlank String firstName,
-            @NotBlank String lastName,
-            @NotBlank @Email String email,
-            @NotBlank String password,
-            @NotBlank String status,
-            @NotNull Long roleId,
-            @NotNull Long batchId
+            @NotBlank 
+            String firstName,
+            @NotBlank 
+            String lastName,
+
+            String studentId,
+
+            @NotBlank 
+            @Email String email,
+            @NotBlank
+            String username,
+
+            @NotBlank 
+            String password,
+
+            String status,
+
+            @NotNull 
+            Long roleId,
+
+            Long batchId,
+            Long campusId
+            
+            
     ) {
     }
 
@@ -25,11 +42,14 @@ public final class UserDtos {
             Long userId,
             String firstName,
             String lastName,
+            String studentId,
             String email,
+            String username,
             String status,
             LocalDateTime createdAt,
             Long roleId,
-            Long batchId
+            Long batchId,
+            Long campusId
     ) {
     }
 }

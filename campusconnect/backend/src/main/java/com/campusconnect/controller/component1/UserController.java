@@ -9,33 +9,36 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/component1/users")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
+
     private final UserService userService;
 
-    @PostMapping
+    @PostMapping("/create")
     public UserDtos.Response create(@Valid @RequestBody UserDtos.Request request) {
         return userService.create(request);
     }
 
-    @PutMapping("/{userId}")
-    public UserDtos.Response update(@PathVariable Long userId, @Valid @RequestBody UserDtos.Request request) {
+    @PutMapping("/update")
+    public UserDtos.Response update(
+            @RequestParam Long userId,
+            @Valid @RequestBody UserDtos.Request request) {
         return userService.update(userId, request);
     }
 
-    @GetMapping("/{userId}")
-    public UserDtos.Response getById(@PathVariable Long userId) {
+    @GetMapping("/get")
+    public UserDtos.Response getById(@RequestParam Long userId) {
         return userService.getById(userId);
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public List<UserDtos.Response> getAll() {
         return userService.getAll();
     }
 
-    @DeleteMapping("/{userId}")
-    public void delete(@PathVariable Long userId) {
+    @DeleteMapping("/delete")
+    public void delete(@RequestParam Long userId) {
         userService.delete(userId);
     }
 }

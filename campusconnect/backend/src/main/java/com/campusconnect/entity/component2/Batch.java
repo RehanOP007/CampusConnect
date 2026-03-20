@@ -22,6 +22,8 @@ public class Batch {
 
     private String intakeMonth;
 
+    private String batchName;
+
     private String status;
 
     private LocalDateTime createdAt;
