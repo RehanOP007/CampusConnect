@@ -10,6 +10,10 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import NotificationBanner from "../../components/NotificationBanner";
+import Sidebar from "../components/SideBar";
+import SectionUsers from "./SectionUsers";
+import SectionRequests from "./SectionRequests";
+import SectionBatchReps from "./SectionBatchReps";
 import myImage from "../../assets/sliit_logo.png";
 import sliitBg from "../../assets/sliit.jpg";
 
@@ -369,309 +373,17 @@ const exportLogsCSV=(filteredLogs)=>exportCSV(["ID","Severity","Category","Actio
 // ═══════════════════════════════════════════════════════════════════
 // SECTION: USERS
 // ═══════════════════════════════════════════════════════════════════
-const SectionUsers = ({ notify, isDark }) => {
-  const t=T(isDark);
-  const[users,setUsers]=useState(SEED_USERS);
-  const[filter,setFilter]=useState("all");
-  const[selected,setSelected]=useState("");
-  const[search,setSearch]=useState("");
-  const[modal,setModal]=useState(null);
-  const[confirm,setConfirm]=useState(null);
-  const[form,setForm]=useState({});
-  const hc=(e)=>setForm(p=>({...p,[e.target.name]:e.target.value}));
-  const total=users.length,active=users.filter(u=>u.active).length,inactive=total-active;
-  const facCount=INITIAL_FACULTIES.map(f=>({name:f,total:users.filter(u=>u.faculty===f).length,active:users.filter(u=>u.faculty===f&&u.active).length,inactive:users.filter(u=>u.faculty===f&&!u.active).length}));
-  const progCount=PROGRAM_NAMES.map(p=>({name:p,faculty:PROG_TO_FAC[p],total:users.filter(u=>u.program===p).length,active:users.filter(u=>u.program===p&&u.active).length,inactive:users.filter(u=>u.program===p&&!u.active).length}));
-  const displayed=users.filter(u=>{const ms=!search||u.name.toLowerCase().includes(search.toLowerCase())||u.username.toLowerCase().includes(search.toLowerCase());if(filter==="faculty"&&selected)return u.faculty===selected&&ms;if(filter==="program"&&selected)return u.program===selected&&ms;return ms;});
-  const openAdd=()=>{setForm({name:"",username:"",email:"",role:"Student",faculty:"Computing",program:"Software Engineering",batch:""});setModal({mode:"add"});};
-  const openEdit=(u)=>{setForm({...u});setModal({mode:"edit",id:u.id});};
-  const save=()=>{if(modal.mode==="add"){setUsers(p=>[...p,{...form,id:Date.now(),active:true}]);notify("success","User created.");}else{setUsers(p=>p.map(u=>u.id===modal.id?{...u,...form}:u));notify("success","User updated.");}setModal(null);};
-  const toggleActive=(id)=>{setUsers(p=>p.map(u=>u.id===id?{...u,active:!u.active}:u));notify("info","Status updated.");};
-  const doDelete=(id)=>{setUsers(p=>p.filter(u=>u.id!==id));notify("success","User deleted.");setConfirm(null);};
 
-  // Breakdown card helper — solid colors readable in both modes
-  const bkCard=(isActive)=>isDark
-    ? isActive?"border-blue-500 bg-blue-500/20":"border-[#2B3E7A] bg-[#111B3D] hover:border-blue-500/60 hover:bg-blue-500/10"
-    : isActive?"border-blue-400 bg-blue-50":"border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50/50";
-  const bkPurple=(isActive)=>isDark
-    ? isActive?"border-purple-500 bg-purple-500/20":"border-[#2B3E7A] bg-[#111B3D] hover:border-purple-500/60 hover:bg-purple-500/10"
-    : isActive?"border-purple-400 bg-purple-50":"border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50";
-
-  return (
-    <div className={`min-h-full ${t.pageBg} p-6 space-y-6`}>
-      <div>
-        <h2 className={`text-base font-black mb-4 flex items-center gap-2 ${t.textPrimary}`}><Users size={18} className="text-[#5478FF]"/>User Overview</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard label="Total Students"    value={total}    icon={Users}       colorKey="blue"  isDark={isDark}/>
-          <StatCard label="Active Students"   value={active}   icon={CheckCircle} colorKey="green" isDark={isDark} sub={`${Math.round((active/total)*100)}% of total`}/>
-          <StatCard label="Inactive Students" value={inactive} icon={XCircle}     colorKey="red"   isDark={isDark} sub={`${Math.round((inactive/total)*100)}% of total`}/>
-        </div>
-      </div>
-
-      <div className={`${t.cardBg} rounded-2xl border ${t.cardBorder} shadow-sm p-5`}>
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <h3 className={`font-bold text-sm flex items-center gap-2 ${t.textPrimary}`}><Filter size={15} className="text-[#5478FF]"/>Student Breakdown</h3>
-          <div className="flex items-center gap-2 flex-wrap">
-            <ThemedSelect isDark={isDark} value={filter} onChange={v=>{setFilter(v);setSelected("");}} options={["all","faculty","program"]} placeholder="View by…"/>
-            {filter==="faculty"&&<ThemedSelect isDark={isDark} value={selected} onChange={setSelected} options={INITIAL_FACULTIES} placeholder="All Faculties"/>}
-            {filter==="program"&&<ThemedSelect isDark={isDark} value={selected} onChange={setSelected} options={PROGRAM_NAMES} placeholder="All Programs"/>}
-          </div>
-        </div>
-
-        {filter==="faculty"&&(
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            {(selected?facCount.filter(f=>f.name===selected):facCount).map(f=>(
-              <div key={f.name} onClick={()=>{setFilter("faculty");setSelected(f.name);}} className={`p-3 rounded-xl border cursor-pointer transition-all hover:shadow-md ${bkCard(selected===f.name)}`}>
-                <p className={`text-xs font-bold mb-1 ${t.textPrimary}`}>{f.name}</p>
-                <p className="text-xl font-black text-blue-500">{f.total}</p>
-                <div className="flex gap-2 mt-1"><span className="text-[10px] text-emerald-500 font-bold">✓ {f.active}</span><span className="text-[10px] text-red-500 font-bold">✗ {f.inactive}</span></div>
-              </div>
-            ))}
-          </div>
-        )}
-        {filter==="program"&&(
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-            {(selected?progCount.filter(p=>p.name===selected):progCount).map(p=>(
-              <div key={p.name} onClick={()=>{setFilter("program");setSelected(p.name);}} className={`p-3 rounded-xl border cursor-pointer transition-all hover:shadow-md ${bkPurple(selected===p.name)}`}>
-                <p className={`text-xs font-bold mb-0.5 truncate ${t.textPrimary}`}>{p.name}</p>
-                <p className={`text-[10px] mb-1 ${t.textMuted}`}>{p.faculty}</p>
-                <p className="text-xl font-black text-purple-500">{p.total}</p>
-                <div className="flex gap-2 mt-1"><span className="text-[10px] text-emerald-500 font-bold">✓ {p.active}</span><span className="text-[10px] text-red-500 font-bold">✗ {p.inactive}</span></div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <p className={`text-xs font-medium ${t.textSecondary}`}>Showing <span className={`font-bold ${t.textPrimary}`}>{displayed.length}</span> users{selected?` · ${selected}`:""}</p>
-          <div className="flex gap-2">
-            <ThemedSearch isDark={isDark} value={search} onChange={setSearch} placeholder="Search users…"/>
-            <button onClick={openAdd} className="flex items-center gap-1.5 px-3 py-2 bg-[#5478FF] text-white rounded-xl text-xs font-bold hover:bg-[#4060ee] shadow-sm shadow-[#5478FF]/30"><Plus size={13}/>Add User</button>
-          </div>
-        </div>
-
-        <div className={`overflow-x-auto rounded-xl border ${t.innerBorder}`}>
-          <table className="w-full text-sm">
-            <thead><tr className={`${t.tableHead} text-xs uppercase tracking-wider border-b ${t.divider}`}>{["Name","Username","Email","Role","Faculty","Program","Batch","Status","Actions"].map(h=><th key={h} className="px-4 py-2.5 text-left font-semibold">{h}</th>)}</tr></thead>
-            <tbody>
-              {displayed.length===0
-                ? <tr><td colSpan={9} className={`py-10 text-center text-sm ${t.textMuted}`}>No users found</td></tr>
-                : displayed.map((u,i)=>(
-                  <tr key={u.id} className={`border-t ${t.divider} ${i%2===1?t.rowAlt:""} ${t.rowHover} transition-colors`}>
-                    <td className={`px-4 py-2.5 font-semibold text-xs whitespace-nowrap ${t.textPrimary}`}>{u.name}</td>
-                    <td className="px-4 py-2.5 text-sky-500 text-xs font-medium">@{u.username}</td>
-                    <td className={`px-4 py-2.5 text-xs ${t.textSecondary}`}>{u.email}</td>
-                    <td className="px-4 py-2.5 text-xs"><RoleBadge role={u.role}/></td>
-                    <td className={`px-4 py-2.5 text-xs font-medium ${t.textSecondary}`}>{u.faculty}</td>
-                    <td className={`px-4 py-2.5 text-xs whitespace-nowrap ${t.textSecondary}`}>{u.program}</td>
-                    <td className={`px-4 py-2.5 text-xs ${t.textMuted}`}>{u.batch}</td>
-                    <td className="px-4 py-2.5"><StatusBadge status={u.active?"ACTIVE":"INACTIVE"}/></td>
-                    <td className="px-4 py-2.5"><div className="flex items-center gap-1">
-                      <button onClick={()=>openEdit(u)} className="p-1.5 rounded-lg text-sky-500 hover:bg-sky-500/10 transition-colors"><Pencil size={12}/></button>
-                      <button onClick={()=>toggleActive(u.id)} className={`p-1.5 rounded-lg transition-colors ${u.active?"text-amber-500 hover:bg-amber-500/10":"text-emerald-500 hover:bg-emerald-500/10"}`}>{u.active?<ToggleRight size={12}/>:<ToggleLeft size={12}/>}</button>
-                      <button onClick={()=>setConfirm(u.id)} className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors"><Trash2 size={12}/></button>
-                    </div></td>
-                  </tr>
-                ))
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <ThemedModal isDark={isDark} open={!!modal} onClose={()=>setModal(null)} title={modal?.mode==="add"?"Add New User":"Edit User"} wide>
-        <div className="grid grid-cols-2 gap-x-4">
-          <ThemedField isDark={isDark} label="Full Name" name="name" value={form.name??""} onChange={hc} required/>
-          <ThemedField isDark={isDark} label="Username" name="username" value={form.username??""} onChange={hc} required/>
-          <ThemedField isDark={isDark} label="Email" name="email" value={form.email??""} onChange={hc} type="email" required/>
-          <ThemedField isDark={isDark} label="Batch" name="batch" value={form.batch??""} onChange={hc} placeholder="e.g. IT2023"/>
-          <ThemedField isDark={isDark} label="Role" name="role" value={form.role??""} onChange={hc} options={["Student","Batch Rep","Admin"]} required/>
-          <ThemedField isDark={isDark} label="Faculty" name="faculty" value={form.faculty??""} onChange={hc} options={INITIAL_FACULTIES} required/>
-          <div className="col-span-2"><ThemedField isDark={isDark} label="Program" name="program" value={form.program??""} onChange={hc} options={PROGRAM_NAMES} required/></div>
-        </div>
-        <div className="flex justify-end gap-2 mt-2">
-          <button onClick={()=>setModal(null)} className={`px-4 py-2 rounded-xl border text-sm font-semibold ${t.cardBorder} ${t.textSecondary} hover:opacity-80`}>Cancel</button>
-          <button onClick={save} className="px-4 py-2 rounded-xl bg-[#5478FF] text-white text-sm font-semibold hover:bg-[#4060ee] shadow-sm">Save</button>
-        </div>
-      </ThemedModal>
-      <ConfirmDialog open={!!confirm} onConfirm={()=>doDelete(confirm)} onCancel={()=>setConfirm(null)} title="Delete User" message="This will permanently delete the user account." confirmLabel="Yes, Delete" variant="danger" theme={DARK_THEME_DIALOG}/>
-    </div>
-  );
-};
 
 // ═══════════════════════════════════════════════════════════════════
 // SECTION: BATCH REPS
 // ═══════════════════════════════════════════════════════════════════
-const SectionBatchReps = ({ notify, isDark }) => {
-  const t=T(isDark);
-  const[reps,setReps]=useState(SEED_REPS);
-  const[filter,setFilter]=useState("all");
-  const[selected,setSelected]=useState("");
-  const[modal,setModal]=useState(false);
-  const[confirm,setConfirm]=useState(null);
-  const[form,setForm]=useState({name:"",email:"",faculty:"Computing",program:"Software Engineering",batch:""});
-  const hc=(e)=>setForm(p=>({...p,[e.target.name]:e.target.value}));
-  const total=reps.length,active=reps.filter(r=>r.active).length,inactive=total-active;
-  const facCount=INITIAL_FACULTIES.map(f=>({name:f,total:reps.filter(r=>r.faculty===f).length,active:reps.filter(r=>r.faculty===f&&r.active).length,inactive:reps.filter(r=>r.faculty===f&&!r.active).length}));
-  const progCount=PROGRAM_NAMES.map(p=>({name:p,faculty:PROG_TO_FAC[p],total:reps.filter(r=>r.program===p).length,active:reps.filter(r=>r.program===p&&r.active).length,inactive:reps.filter(r=>r.program===p&&!r.active).length}));
-  const detailReps=filter==="faculty"&&selected?reps.filter(r=>r.faculty===selected):filter==="program"&&selected?reps.filter(r=>r.program===selected):reps;
-  const save=()=>{setReps(p=>[...p,{...form,id:Date.now(),since:new Date().toISOString().slice(0,7),active:true}]);notify("success","Batch Rep assigned.");setModal(false);};
-  const remove=(id)=>{setReps(p=>p.filter(r=>r.id!==id));notify("success","Batch Rep removed.");setConfirm(null);};
-  const bkCard=(a)=>isDark?(a?"border-blue-500 bg-blue-500/20":"border-[#2B3E7A] bg-[#111B3D] hover:border-blue-500/50"):(a?"border-blue-400 bg-blue-50":"border-gray-200 bg-white hover:border-blue-300");
-  const bkPurple=(a)=>isDark?(a?"border-purple-500 bg-purple-500/20":"border-[#2B3E7A] bg-[#111B3D] hover:border-purple-500/50"):(a?"border-purple-400 bg-purple-50":"border-gray-200 bg-white hover:border-purple-300");
-
-  return (
-    <div className={`min-h-full ${t.pageBg} p-6 space-y-6`}>
-      <div>
-        <h2 className={`text-base font-black mb-4 flex items-center gap-2 ${t.textPrimary}`}><UserCheck size={18} className="text-[#5478FF]"/>Batch Rep Overview</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard label="Total Batch Reps" value={total}    icon={UserCheck}   colorKey="blue"  isDark={isDark}/>
-          <StatCard label="Active Reps"      value={active}   icon={CheckCircle} colorKey="green" isDark={isDark} sub={`${Math.round((active/total)*100)}%`}/>
-          <StatCard label="Inactive Reps"    value={inactive} icon={XCircle}     colorKey="red"   isDark={isDark} sub={`${Math.round((inactive/total)*100)}%`}/>
-        </div>
-      </div>
-      <div className={`${t.cardBg} rounded-2xl border ${t.cardBorder} shadow-sm p-5`}>
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <h3 className={`font-bold text-sm flex items-center gap-2 ${t.textPrimary}`}><Filter size={15} className="text-[#5478FF]"/>Breakdown</h3>
-          <div className="flex items-center gap-2 flex-wrap">
-            <ThemedSelect isDark={isDark} value={filter} onChange={v=>{setFilter(v);setSelected("");}} options={["all","faculty","program"]} placeholder="View by…"/>
-            {filter==="faculty"&&<ThemedSelect isDark={isDark} value={selected} onChange={setSelected} options={INITIAL_FACULTIES} placeholder="All Faculties"/>}
-            {filter==="program"&&<ThemedSelect isDark={isDark} value={selected} onChange={setSelected} options={PROGRAM_NAMES} placeholder="All Programs"/>}
-            <button onClick={()=>setModal(true)} className="flex items-center gap-1.5 px-3 py-2 bg-[#5478FF] text-white rounded-xl text-xs font-bold hover:bg-[#4060ee] shadow-sm"><Plus size={13}/>Assign Rep</button>
-          </div>
-        </div>
-        {filter==="faculty"&&<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">{(selected?facCount.filter(f=>f.name===selected):facCount).map(f=><div key={f.name} onClick={()=>{setFilter("faculty");setSelected(f.name===selected?"":f.name);}} className={`p-3 rounded-xl border cursor-pointer transition-all hover:shadow-md ${bkCard(selected===f.name)}`}><p className={`text-xs font-bold mb-1 ${t.textPrimary}`}>{f.name}</p><p className="text-2xl font-black text-blue-500">{f.total}</p><div className="flex gap-2 mt-1"><span className="text-[10px] text-emerald-500 font-bold">✓ {f.active}</span><span className="text-[10px] text-red-500 font-bold">✗ {f.inactive}</span></div></div>)}</div>}
-        {filter==="program"&&<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">{(selected?progCount.filter(p=>p.name===selected):progCount).map(p=><div key={p.name} onClick={()=>{setFilter("program");setSelected(p.name===selected?"":p.name);}} className={`p-3 rounded-xl border cursor-pointer transition-all hover:shadow-md ${bkPurple(selected===p.name)}`}><p className={`text-xs font-bold mb-0.5 truncate ${t.textPrimary}`}>{p.name}</p><p className={`text-[10px] mb-1 ${t.textMuted}`}>{p.faculty}</p><p className="text-2xl font-black text-purple-500">{p.total}</p><div className="flex gap-2 mt-1"><span className="text-[10px] text-emerald-500 font-bold">✓ {p.active}</span><span className="text-[10px] text-red-500 font-bold">✗ {p.inactive}</span></div></div>)}</div>}
-        <p className={`text-xs font-medium mb-3 ${t.textSecondary}`}><span className={`font-bold ${t.textPrimary}`}>{detailReps.length}</span> batch reps{selected?` · ${selected}`:""}</p>
-        {detailReps.length===0?<div className={`py-10 text-center text-sm ${t.textMuted}`}>No batch reps found</div>
-        :<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{detailReps.map(r=>(
-          <div key={r.id} className={`${t.innerBg} border ${t.innerBorder} rounded-xl p-4 hover:border-blue-400/50 hover:shadow-md transition-all`}>
-            <div className="flex items-start justify-between mb-2">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#5478FF] to-[#53CBF3] flex items-center justify-center text-white font-black text-sm shrink-0">{r.name.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
-              <StatusBadge status={r.active?"ACTIVE":"INACTIVE"}/>
-            </div>
-            <p className={`font-bold text-sm mt-1 ${t.textPrimary}`}>{r.name}</p>
-            <p className="text-sky-500 text-xs font-medium">{r.batch}</p>
-            <p className={`text-xs ${t.textSecondary}`}>{r.email}</p>
-            <p className={`text-xs ${t.textMuted}`}>{r.faculty} · {r.program}</p>
-            <p className="text-amber-500 text-[10px] font-semibold mt-0.5">Since {r.since}</p>
-            <button onClick={()=>setConfirm(r.id)} className="mt-3 w-full text-xs py-1.5 rounded-xl border border-red-400/40 text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-1.5 font-semibold"><Trash2 size={11}/>Remove</button>
-          </div>
-        ))}</div>}
-      </div>
-      <ThemedModal isDark={isDark} open={modal} onClose={()=>setModal(false)} title="Assign Batch Rep Manually">
-        <ThemedField isDark={isDark} label="Full Name" name="name" value={form.name} onChange={hc} required/>
-        <ThemedField isDark={isDark} label="Email" name="email" value={form.email} onChange={hc} type="email" required/>
-        <ThemedField isDark={isDark} label="Faculty" name="faculty" value={form.faculty} onChange={hc} options={INITIAL_FACULTIES} required/>
-        <ThemedField isDark={isDark} label="Program" name="program" value={form.program} onChange={hc} options={PROGRAM_NAMES} required/>
-        <ThemedField isDark={isDark} label="Batch" name="batch" value={form.batch} onChange={hc} placeholder="e.g. IT2023" required/>
-        <div className="flex justify-end gap-2 mt-2">
-          <button onClick={()=>setModal(false)} className={`px-4 py-2 rounded-xl border text-sm font-semibold ${t.cardBorder} ${t.textSecondary} hover:opacity-80`}>Cancel</button>
-          <button onClick={save} className="px-4 py-2 rounded-xl bg-[#5478FF] text-white text-sm font-semibold hover:bg-[#4060ee]">Assign</button>
-        </div>
-      </ThemedModal>
-      <ConfirmDialog open={!!confirm} onConfirm={()=>remove(confirm)} onCancel={()=>setConfirm(null)} title="Remove Batch Rep" message="Remove the batch representative role?" confirmLabel="Yes, Remove" variant="danger" theme={DARK_THEME_DIALOG}/>
-    </div>
-  );
-};
 
 // ═══════════════════════════════════════════════════════════════════
 // SECTION: REQUESTS
 // ═══════════════════════════════════════════════════════════════════
 const STATUS_FLOW={PENDING:{next:["APPROVED","REJECTED"]},APPROVED:{next:[]},REJECTED:{next:["DELETED"]},DELETED:{next:[]}};
 
-const SectionRequests = ({ notify, isDark }) => {
-  const t=T(isDark);
-  const[requests,setRequests]=useState(SEED_REQUESTS);
-  const[statusFilt,setStatusFilt]=useState("ALL");
-  const[commentModal,setCommentModal]=useState(null);
-  const[comment,setComment]=useState("");
-  const counts={PENDING:requests.filter(r=>r.status==="PENDING").length,APPROVED:requests.filter(r=>r.status==="APPROVED").length,REJECTED:requests.filter(r=>r.status==="REJECTED").length,DELETED:requests.filter(r=>r.status==="DELETED").length};
-  const displayed=statusFilt==="ALL"?requests:requests.filter(r=>r.status===statusFilt);
-  const actionLabel=(a)=>({APPROVED:"Approve",REJECTED:"Reject",DELETED:"Delete"}[a]??a);
-  const executeAction=()=>{const{id,action}=commentModal;setRequests(p=>p.map(r=>r.id===id?{...r,status:action,comment}:r));notify(action==="APPROVED"?"success":action==="REJECTED"?"error":"info",`Request ${action.toLowerCase()}.`);setCommentModal(null);setComment("");};
-
-  const FILTER_BTNS=[
-    {key:"ALL",     label:"All",      activeCls:"bg-slate-700 text-white",     inactiveDark:"bg-[#0B1230] text-slate-300 border border-[#2B3E7A] hover:bg-[#1C2C5A]",     inactiveLight:"bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"},
-    {key:"PENDING", label:"Pending",  activeCls:"bg-amber-500 text-white",     inactiveDark:"bg-amber-500/10 text-amber-300 border border-amber-500/40 hover:bg-amber-500/20", inactiveLight:"bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100"},
-    {key:"APPROVED",label:"Approved", activeCls:"bg-emerald-500 text-white",   inactiveDark:"bg-emerald-500/10 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/20", inactiveLight:"bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"},
-    {key:"REJECTED",label:"Rejected", activeCls:"bg-red-500 text-white",       inactiveDark:"bg-red-500/10 text-red-300 border border-red-500/40 hover:bg-red-500/20",     inactiveLight:"bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"},
-    {key:"DELETED", label:"Deleted",  activeCls:"bg-slate-500 text-white",     inactiveDark:"bg-[#0B1230] text-slate-400 border border-[#2B3E7A] hover:bg-[#1C2C5A]",     inactiveLight:"bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100"},
-  ];
-
-  const REQ_COLORS={"Batch Rep Registration":{accent:"border-l-blue-400",hdrDark:"bg-blue-500/10",hdrLight:"bg-blue-50",dot:"bg-blue-500",typeCls:"bg-blue-100 text-blue-800 border-blue-300"},"Batch Rep Change":{accent:"border-l-purple-400",hdrDark:"bg-purple-500/10",hdrLight:"bg-purple-50",dot:"bg-purple-500",typeCls:"bg-purple-100 text-purple-800 border-purple-300"},"Student Request":{accent:"border-l-teal-400",hdrDark:"bg-teal-500/10",hdrLight:"bg-teal-50",dot:"bg-teal-500",typeCls:"bg-teal-100 text-teal-800 border-teal-300"}};
-
-  return (
-    <div className={`min-h-full ${t.pageBg} p-6 space-y-6`}>
-      <div>
-        <h2 className={`text-base font-black mb-4 flex items-center gap-2 ${t.textPrimary}`}><ClipboardList size={18} className="text-[#5478FF]"/>Request Overview</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatCard label="Pending"  value={counts.PENDING}  icon={Clock}       colorKey="amber" isDark={isDark}/>
-          <StatCard label="Approved" value={counts.APPROVED} icon={CheckCircle} colorKey="green" isDark={isDark}/>
-          <StatCard label="Rejected" value={counts.REJECTED} icon={XCircle}     colorKey="red"   isDark={isDark}/>
-          <StatCard label="Deleted"  value={counts.DELETED}  icon={Trash2}      colorKey="gray"  isDark={isDark}/>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 flex-wrap">
-        {FILTER_BTNS.map(btn=>(
-          <button key={btn.key} onClick={()=>setStatusFilt(btn.key)} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${statusFilt===btn.key?btn.activeCls:(isDark?btn.inactiveDark:btn.inactiveLight)}`}>
-            {btn.label}<span className="ml-1.5 opacity-80">({btn.key==="ALL"?requests.length:counts[btn.key]??0})</span>
-          </button>
-        ))}
-      </div>
-      {displayed.length===0
-        ? <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl py-16 text-center text-sm shadow-sm ${t.textMuted}`}>No requests found.</div>
-        : <div className="space-y-3">{displayed.map(r=>{
-            const rc=REQ_COLORS[r.type]??REQ_COLORS["Student Request"];
-            const sc=STATUS_FLOW[r.status]??{};
-            return (
-              <div key={r.id} className={`${t.cardBg} rounded-2xl border border-l-4 ${rc.accent} ${t.cardBorder} shadow-sm overflow-hidden`}>
-                <div className={`${isDark?rc.hdrDark:rc.hdrLight} px-5 py-2.5 flex items-center justify-between flex-wrap gap-2 border-b ${t.divider}`}>
-                  <div className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${rc.dot}`}/><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${rc.typeCls}`}>{r.type}</span><span className={`text-xs ${t.textMuted}`}>#{r.id}</span></div>
-                  <StatusBadge status={r.status}/>
-                </div>
-                <div className="px-5 py-4 flex items-start justify-between gap-4 flex-wrap">
-                  <div>
-                    <p className={`font-bold text-sm ${t.textPrimary}`}>{r.from}</p>
-                    <p className="text-sky-500 text-xs font-medium">{r.batch} · <span className={t.textSecondary}>{r.faculty}</span></p>
-                    <p className={`text-xs mt-0.5 ${t.textMuted}`}>{r.date}</p>
-                    {r.comment&&<p className={`text-xs mt-1.5 italic ${t.innerBg} px-3 py-1.5 rounded-lg border ${t.innerBorder} ${t.textSecondary}`}>"{r.comment}"</p>}
-                  </div>
-                  {sc.next?.length>0&&(
-                    <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                      {sc.next.map(ns=>(
-                        <button key={ns} onClick={()=>{setComment("");setCommentModal({id:r.id,action:ns});}}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${ns==="APPROVED"?"bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-200":ns==="REJECTED"?"bg-red-100 text-red-700 border-red-300 hover:bg-red-200":"bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"}`}>
-                          {ns==="APPROVED"&&<CheckCircle size={12}/>}{ns==="REJECTED"&&<XCircle size={12}/>}{ns==="DELETED"&&<Trash2 size={12}/>}
-                          {actionLabel(ns)}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}</div>
-      }
-      <ThemedModal isDark={isDark} open={!!commentModal} onClose={()=>setCommentModal(null)} title={commentModal?`${actionLabel(commentModal.action)} Request`:""}>
-        {commentModal&&<>
-          <div className={`rounded-xl p-3 mb-4 text-sm font-medium flex items-start gap-2 ${commentModal.action==="APPROVED"?"bg-emerald-100 text-emerald-800 border border-emerald-300":commentModal.action==="REJECTED"?"bg-red-100 text-red-800 border border-red-300":"bg-slate-100 text-slate-600 border border-slate-200"}`}>
-            {commentModal.action==="APPROVED"&&<CheckCircle size={16} className="mt-0.5 shrink-0"/>}{commentModal.action==="REJECTED"&&<XCircle size={16} className="mt-0.5 shrink-0"/>}{commentModal.action==="DELETED"&&<Trash2 size={16} className="mt-0.5 shrink-0"/>}
-            <span>Mark this request as <strong>{commentModal.action}</strong>.{commentModal.action==="DELETED"?" Cannot be undone.":""}</span>
-          </div>
-          <div className="mb-4">
-            <label className={`block text-xs font-semibold mb-1.5 ${t.textSecondary}`}>Comment / Feedback (optional)</label>
-            <textarea value={comment} onChange={e=>setComment(e.target.value)} rows={3} className={`w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5478FF]/40 resize-none ${t.inputBg}`} placeholder="Add a note…"/>
-          </div>
-          <div className="flex justify-end gap-2">
-            <button onClick={()=>setCommentModal(null)} className={`px-4 py-2 rounded-xl border text-sm font-semibold ${t.cardBorder} ${t.textSecondary} hover:opacity-80`}>Cancel</button>
-            <button onClick={executeAction} className={`px-4 py-2 rounded-xl text-sm font-bold ${commentModal.action==="APPROVED"?"bg-emerald-500 hover:bg-emerald-600 text-white":"bg-red-500 hover:bg-red-600 text-white"}`}>Confirm {actionLabel(commentModal.action)}</button>
-          </div>
-        </>}
-      </ThemedModal>
-    </div>
-  );
-};
 
 // ═══════════════════════════════════════════════════════════════════
 // SECTION: ENTITIES
@@ -1207,34 +919,15 @@ export default function Admin() {
     <div className={`flex h-screen overflow-hidden ${t.pageBg}`}>
 
       {/* SIDEBAR */}
-      <aside className={`w-64 ${t.sidebarBg} border-r ${t.sidebarBorder} transition-all duration-300 flex flex-col`}>
-        <div className={`h-20 flex items-center px-6 border-b ${t.sidebarFooterBorder}`}>
-          <div className="h-10 w-10 bg-[#5478FF] rounded-xl flex items-center justify-center text-white font-black shrink-0 shadow-lg shadow-[#5478FF]/30">CC</div>
-          <span className={`ml-3 font-bold tracking-tight ${t.textPrimary}`}>CampusConnect</span>
-        </div>
-        <nav className="flex-1 overflow-y-auto p-4 space-y-5">
-          {SIDEBAR_GROUPS.map(group=>(
-            <div key={group.id}>
-              <p className={`text-[10px] font-black uppercase tracking-widest mb-2 px-2 ${t.sidebarGroup}`}>{group.label}</p>
-              {group.children.map(item=>(
-                <button key={item.id} onClick={()=>setActive(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all mb-1 text-sm font-semibold ${active===item.id?t.sidebarActive:t.sidebarItem}`}>
-                  <item.icon size={18}/><span>{item.label}</span>
-                </button>
-              ))}
-            </div>
-          ))}
-        </nav>
-        <div className={`p-4 border-t ${t.sidebarFooterBorder} space-y-1`}>
-          <button onClick={toggleTheme} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-semibold ${t.sidebarItem}`}>
-            {isDark?<Sun size={18} className="text-yellow-400"/>:<Moon size={18}/>}
-            <span>{isDark?"Light Mode":"Dark Mode"}</span>
-          </button>
-          <button onClick={()=>setLogoutConfirm(true)} className="w-full flex items-center gap-3 px-3 py-2.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all rounded-xl text-sm font-semibold">
-            <LogOut size={18}/><span>Logout</span>
-          </button>
-        </div>
-      </aside>
+      <Sidebar
+        t={t}
+        isDark={isDark}
+        toggleTheme={toggleTheme}
+        active={active}
+        setActive={setActive}
+        onLogoutClick={() => setLogoutConfirm(true)}
+        SIDEBAR_GROUPS={SIDEBAR_GROUPS}
+      />
 
       {/* MAIN */}
       <main className="flex-1 overflow-y-auto relative">

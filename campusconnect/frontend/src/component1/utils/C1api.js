@@ -1,8 +1,25 @@
 import api from "../../utils/axiosInstance"
 
 export const createUser = (data) => {
-    return api.post(`/api/users/create`);
+    return api.post(`/api/users/create`, data);
 }
+export const updateUser = (userId, data) => {
+    return api.post(`/api/users/update?userId=${userId}`, data);
+}
+export const getAllUsers = () => {
+    return api.get(`/api/users/all`);
+}
+export const getUserById = (userId) => {
+    return api.get(`/api/users/get?userId=${userId}`);
+}
+export const deleteUser = (userId) => {
+    return api.delete(`/api/users/delete?userId=${userId}`);
+}
+
+export const getAllRoles = () => {
+    return api.get(`/api/roles/all`);
+}
+
 export const createFaculty = (data) => {
     api.post("/api/faculties/create", data);
 }
@@ -13,7 +30,7 @@ export const getFaculty = (id) =>{
  api.get(`/api/faculties/get?id=${id}`);
 }
 export const getAllFaculties = () => {
-    api.get("/api/faculties/all");
+    return api.get("/api/faculties/all");
 }
 export const deleteFaculty = (id) => {
     api.delete(`/api/faculties/delete?id=${id}`);
@@ -28,7 +45,7 @@ export const getProgram = (programId) => {
     api.get(`/api/programs/get?programId=${programId}`);
 }
 export const getAllPrograms = () => {
-    api.get("/api/programs/all");
+    return api.get("/api/programs/all");
 }
 export const deleteProgram = (programId) => {
     api.delete(`/api/programs/delete?programId=${programId}`);
@@ -49,12 +66,12 @@ export const deleteBatch = (batchId) => {
     api.delete(`/api/batches/delete?batchId=${batchId}`);
 }
 export const getPendingBatchRepRequests = () => {
-    api.get("/api/admin/batchrep/requests");
+    return api.get("/api/admin/batchrep/requests");
 }
 export const approveBatchRepRequest = (requestId) =>{
-    api.put(`/api/admin/batchrep/approve?requestId=${requestId}`);
+    return api.put(`/api/admin/batchrep/approve?requestId=${requestId}`);
 }
 export const rejectBatchRepRequest = (requestId) =>{
-    api.put(`/api/admin/batchrep/reject?requestId=${requestId}`); 
+    return api.put(`/api/admin/batchrep/reject?requestId=${requestId}`); 
 }
   

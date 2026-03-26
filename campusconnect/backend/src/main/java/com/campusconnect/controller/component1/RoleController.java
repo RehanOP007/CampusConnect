@@ -14,28 +14,28 @@ import java.util.List;
 public class RoleController {
     private final RoleService roleService;
 
-    @PostMapping
+    @PostMapping("/create")
     public RoleDtos.Response create(@Valid @RequestBody RoleDtos.Request request) {
         return roleService.create(request);
     }
 
-    @PutMapping("/{roleId}")
-    public RoleDtos.Response update(@PathVariable Long roleId, @Valid @RequestBody RoleDtos.Request request) {
+    @PutMapping("/update")
+    public RoleDtos.Response update(@RequestParam Long roleId, @Valid @RequestBody RoleDtos.Request request) {
         return roleService.update(roleId, request);
     }
 
-    @GetMapping("/{roleId}")
-    public RoleDtos.Response getById(@PathVariable Long roleId) {
+    @GetMapping("/getById")
+    public RoleDtos.Response getById(@RequestParam Long roleId) {
         return roleService.getById(roleId);
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public List<RoleDtos.Response> getAll() {
         return roleService.getAll();
     }
 
-    @DeleteMapping("/{roleId}")
-    public void delete(@PathVariable Long roleId) {
+    @DeleteMapping("/delete")
+    public void delete(@RequestParam Long roleId) {
         roleService.delete(roleId);
     }
 }
