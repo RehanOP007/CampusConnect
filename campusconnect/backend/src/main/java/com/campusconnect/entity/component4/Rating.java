@@ -1,6 +1,7 @@
 package com.campusconnect.entity.component4;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -18,7 +19,8 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long ratingId;
 
-    private String entityType;
+    @Enumerated(EnumType.STRING)
+    private RatingType entityType;
     // SUBJECT / SESSION / GROUP / RESOURCE
 
     private Long entityId;// id of subject/session/group/resource
@@ -27,10 +29,31 @@ public class Rating {
 
     private String comment;
 
+    @Column(updatable = false)
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    public enum RatingType {
+    SUBJECT,
+    RESOURCE,
+    SESSION,
+    GROUP
+}
+
 }

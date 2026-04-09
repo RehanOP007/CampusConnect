@@ -80,7 +80,8 @@ public CampusDtos.Response update(Long campusId, CampusDtos.Request request) {
                 campus.getCampusId(),
                 campus.getCampusName(),
                 campus.getLocation(),
-                campus.getStatus()
+                campus.getStatus(),
+                campus.getMailDomain()
         );
     }
 }

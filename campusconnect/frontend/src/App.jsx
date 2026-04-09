@@ -4,8 +4,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Login from "./component1/pages/Login.jsx"; // your login page
 import SignUp from "./component1/pages/SignUp.jsx";
 import Admin from "./component1/pages/Admin.jsx";
-import DashboardPage from "./component1/pages/DashboardPage.jsx";
-
+import StudentPortal from "./component1/pages/StudentPortal/Student.jsx";
+import BatchRepPortal from "./component1/pages/BarchRepPortal/BatchRep.jsx";
 function App() {
   // function to check if user is logged in
   const isAuthenticated = () => {
@@ -28,7 +28,8 @@ function App() {
         <Route path="/campusconnect/admin-dashboard" element={<Admin />} />
 
          {/* Student rote*/}
-        <Route path="/campusconnect/student-dashboard" element={<DashboardPage />} />
+        <Route path="/campusconnect/student-dashboard" element={<StudentPortal />} />
+        <Route path="/campusconnect/batchrep-dashboard" element={<BatchRepPortal />} />
       </Routes>
     </Router>
      </AuthProvider>

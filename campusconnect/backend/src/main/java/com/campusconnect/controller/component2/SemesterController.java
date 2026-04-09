@@ -38,6 +38,11 @@ public class SemesterController {
         return semesterService.getAll();
     }
 
+    @GetMapping("/getByBatch")
+    public List<SemesterDtos.Response> getByBatch(@RequestParam Long batchId) {
+        return semesterService.getByBatch(batchId);
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete")
     public void delete(@RequestParam Long semesterId) {

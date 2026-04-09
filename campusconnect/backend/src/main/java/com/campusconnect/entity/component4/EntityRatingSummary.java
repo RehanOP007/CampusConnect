@@ -13,7 +13,9 @@ public class EntityRatingSummary {
     @EmbeddedId
     private EntityRatingSummaryId id;
 
+    @Column(nullable = false)
     private Double averageRating;
 
+    @Column(nullable = false)
     private Integer totalRatings;
 }

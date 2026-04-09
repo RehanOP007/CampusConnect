@@ -17,7 +17,8 @@ public final class CampusDtos {
             Long campusId,
             String campusName,
             String location,
-            String status
+            String status,
+            String mailDomain
     ) {
     }
 }

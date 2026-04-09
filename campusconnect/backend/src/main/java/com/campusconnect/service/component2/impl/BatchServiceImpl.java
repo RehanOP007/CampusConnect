@@ -1,6 +1,7 @@
 package com.campusconnect.service.component2.impl;
 
 import com.campusconnect.dto.component2.BatchDtos;
+import com.campusconnect.dto.component2.CurriculumDtos;
 import com.campusconnect.entity.component2.Batch;
 import com.campusconnect.entity.component2.Campus;
 import com.campusconnect.entity.component2.Curriculum;
@@ -80,6 +81,23 @@ public class BatchServiceImpl implements BatchService {
         return batchRepository.findById(batchId)
                 .map(this::toResponse)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Batch not found: " + batchId));
+    }
+
+    @Override
+    public List<BatchDtos.Response> getByCurriculum(Long curriculumId) {
+
+        List<Batch> batch = batchRepository.findByCurriculum_CurriculumId(curriculumId);
+
+        if (batch.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "No batchs found for curriculumId: " + curriculumId
+            );
+        }
+
+        return batch.stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override

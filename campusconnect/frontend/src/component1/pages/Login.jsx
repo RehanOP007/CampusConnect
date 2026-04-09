@@ -8,24 +8,20 @@ import { getDefaultRoute } from "../../utils/getDefaultRoutes";
 import Loading from "../../components/Loading";
 import NotificationBanner from "../../components/NotificationBanner";
 
+// ── Role IDs ─────────────────────────────────────────────────────
+const ROLE_BATCH_REP = 2;
+
 export default function Login() {
   const { isDark, toggleTheme } = useTheme();
   const theme = isDark ? colors.dark : colors.light;
 
-  const navigate = useNavigate();
-  const { login } = useAuth();
-  
+  const navigate    = useNavigate();
+  const { login, logout } = useAuth();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading,  setLoading]  = useState(false);
   const [notification, setNotification] = useState({ show: false, type: "", message: "" });
-
-  useEffect(() => {
-  if (notification.show) {
-    console.log("Notification updated:", notification);
-  }
-}, [notification]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,16 +30,32 @@ export default function Login() {
 
     try {
       const user = await login(username, password);
-      console.log("Login successful:", user);
-      navigate("/campusconnect/admin", { replace: true });
+
+      // ── Block pending Batch Rep accounts ─────────────────────
+      if (user?.roleId === ROLE_BATCH_REP && user?.status === "PENDING") {
+        // Log them back out so no stale auth remains
+        logout();
+        setLoading(false);
+        setNotification({
+          show: true,
+          type: "error",
+          message: "Your Batch Representative request is still pending approval. Please wait for an admin to approve your account.",
+        });
+        return;
+      }
+
+      // ── Navigate based on role ────────────────────────────────
       setLoading(false);
       setNotification({ show: true, type: "success", message: "Login Successful" });
-      console.log(notification)
+
       setTimeout(() => {
-      if (user?.role) {
-        navigate(getDefaultRoute(user.role), { replace: true });
-      }
-    }, 1500);
+        if (user?.role) {
+          navigate(getDefaultRoute(user.role), { replace: true });
+        } else {
+          navigate("/campusconnect/admin", { replace: true });
+        }
+      }, 1000);
+
     } catch (error) {
       console.error(error);
       setLoading(false);
@@ -58,8 +70,14 @@ export default function Login() {
   return (
     <div className={`min-h-screen ${theme.background}`}>
 
-      {/* Full-screen overlay — must be at root level to cover everything */}
-      {loading && <Loading loading={loading} message="Loading..." />}
+      {loading && <Loading loading={loading} message="Loading..."/>}
+
+      <NotificationBanner
+        show={notification.show}
+        type={notification.type}
+        message={notification.message}
+        onClose={() => setNotification({ show: false, type: "", message: "" })}
+      />
 
       <NavBar
         isDark={isDark}
@@ -69,23 +87,13 @@ export default function Login() {
       />
 
       <div className="flex items-center justify-center min-h-screen pt-16">
-        
         <form
           onSubmit={handleSubmit}
           className={`${theme.cardBg} p-8 rounded-2xl shadow-md w-80 border ${theme.border}`}
         >
-          {notification && 
-            <NotificationBanner
-              show={notification.show}
-              type={notification.type}
-              message={notification.message}
-              onClose={() => setNotification({ show: false, type: "", message: "" })}
-            />
-            }
           <h2 className={`text-2xl font-bold mb-1 text-center ${theme.text}`}>
             Welcome back
           </h2>
-
           <p className={`text-sm text-center mb-6 ${theme.textSecondary}`}>
             Sign in to your account
           </p>
@@ -119,14 +127,15 @@ export default function Login() {
                 ${theme.inputBg} ${theme.border} ${theme.text}`}
             />
           </div>
+
           <button
             type="submit"
-            className={`w-full bg-gradient-to-r ${theme.gradientPrimary} text-white py-3 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity`}
+            disabled={loading}
+            className={`w-full bg-gradient-to-r ${theme.gradientPrimary} text-white py-3 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-60 transition-opacity`}
           >
             Login
           </button>
 
-          {/* Add this below the button */}
           <p className={`text-xs text-center mt-4 ${theme.textSecondary}`}>
             Don't have an account?{" "}
             <button

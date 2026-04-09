@@ -25,11 +25,14 @@ public SecurityFilterChain filterChain(HttpSecurity http, JWTAuthenticationFilte
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/users/create").permitAll()
+                .requestMatchers("/api/users/get").permitAll()
+                .requestMatchers("/api/users/update").permitAll()
 
                 .requestMatchers("/api/roles/all").permitAll()
                 .requestMatchers("/api/roles/**").hasRole("ADMIN")
 
                 .requestMatchers("/api/batches/all").permitAll()
+                .requestMatchers("/api/batches/getByCurriculum").permitAll()
                 .requestMatchers("/api/batches/get").permitAll()
                 .requestMatchers("/api/batches/**").hasAnyRole("ADMIN","BATCH_REP")
                 .requestMatchers("/api/batches/delete").hasRole("ADMIN")
@@ -37,17 +40,29 @@ public SecurityFilterChain filterChain(HttpSecurity http, JWTAuthenticationFilte
                 .requestMatchers("/api/campus/all").permitAll()
                 .requestMatchers("/api/campus/getById").permitAll()
 
-                .requestMatchers("/api/curriculam/all").permitAll()
-                .requestMatchers("/api/curriculam/get").permitAll()
-
                 .requestMatchers("/api/faculties/all").permitAll()
+                .requestMatchers("/api/faculties/getByCampus").permitAll()
                 .requestMatchers("/api/faculties/get").permitAll()
 
+                .requestMatchers("/api/programs/all").permitAll()
+                .requestMatchers("/api/programs/getByFaculty").permitAll()
+                .requestMatchers("/api/programs/get").permitAll()
+
+                .requestMatchers("/api/curriculums/all").permitAll()
+                .requestMatchers("/api/curriculums/getByProgram").permitAll()
+
                 .requestMatchers("/api/semesters/all").permitAll()
+                .requestMatchers("/api/semesters/getByBatch").permitAll()
                 .requestMatchers("/api/semesters/get").permitAll()
                 
                 .requestMatchers("/api/subjects/get").permitAll()
                 .requestMatchers("/api/subjects/getBySemester").permitAll()
+
+                .requestMatchers("/api/resources/getBySubject").permitAll()
+                .requestMatchers("/api/resources/get").permitAll()
+                .requestMatchers("/api/resources/create").permitAll()
+                .requestMatchers("/api/resources/update").permitAll()
+
 
                 .anyRequest().authenticated()
         )

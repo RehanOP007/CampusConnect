@@ -12,6 +12,8 @@ public interface FacultyService {
 
     FacultyDtos.Response getById(Long id);
 
+    List<FacultyDtos.Response> getByCampusId(Long campusId);
+
     List<FacultyDtos.Response> getAll();
 
     void delete(Long id);

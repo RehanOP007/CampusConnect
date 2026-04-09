@@ -8,12 +8,13 @@ import {
 import {
   getAllUsers,
   getAllRoles,
-  getAllFaculties,
-  getAllPrograms,
   createUser,
   deleteUser,
   updateUser
 } from "../utils/C1api";
+
+import {getAllFaculties,
+  getAllPrograms} from "../../component2/utils/C2api"
 
 import {
   StatCard,

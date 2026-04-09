@@ -13,6 +13,8 @@ public interface SemesterService {
 
     List<SemesterDtos.Response> getAll();
 
+    List<SemesterDtos.Response> getByBatch(Long batchId);
+
     void delete(Long semesterId);
 }
 

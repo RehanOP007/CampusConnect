@@ -37,6 +37,11 @@ public class BatchController {
         return batchService.getAll();
     }
 
+    @GetMapping("/getByCurriculum")
+    public List<BatchDtos.Response> getByCurrulum(@RequestParam Long curriculumId) {
+        return batchService.getByCurriculum(curriculumId);
+    }
+
     @DeleteMapping("/delete")
     public void delete(@RequestParam Long batchId) {
         batchService.delete(batchId);

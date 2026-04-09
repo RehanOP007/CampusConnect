@@ -34,6 +34,11 @@ public class FacultyController {
         return facultyService.getById(id);
     }
 
+    @GetMapping("/getByCampus")
+    public List<FacultyDtos.Response> getByCampuList(@RequestParam Long id) {
+        return facultyService.getByCampusId(id);
+    }
+
     @GetMapping("/all")
     public List<FacultyDtos.Response> getAll() {
         return facultyService.getAll();

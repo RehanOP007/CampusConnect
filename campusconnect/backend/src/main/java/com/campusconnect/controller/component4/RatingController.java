@@ -1,6 +1,7 @@
 package com.campusconnect.controller.component4;
 
 import com.campusconnect.dto.component4.RatingDtos;
+import com.campusconnect.entity.component4.Rating;
 import com.campusconnect.service.component4.RatingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +28,12 @@ public class RatingController {
         return ratingService.getById(id);
     }
 
-    // ✅ Get ratings for entity
+    // ✅ Get ratings for entity (ENUM version)
     @GetMapping("/entity")
     public List<RatingDtos.Response> getByEntity(
-            @RequestParam String entityType,
-            @RequestParam Long entityId) {
+            @RequestParam Rating.RatingType entityType,
+            @RequestParam Long entityId
+    ) {
         return ratingService.getByEntity(entityType, entityId);
     }
 

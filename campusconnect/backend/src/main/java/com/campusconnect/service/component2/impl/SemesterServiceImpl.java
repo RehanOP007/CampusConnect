@@ -1,7 +1,9 @@
 package com.campusconnect.service.component2.impl;
 
+import com.campusconnect.dto.component2.ProgramDtos;
 import com.campusconnect.dto.component2.SemesterDtos;
 import com.campusconnect.entity.component2.Batch;
+import com.campusconnect.entity.component2.Program;
 import com.campusconnect.entity.component2.Semester;
 import com.campusconnect.repository.component2.BatchRepository;
 import com.campusconnect.repository.component2.SemesterRepository;
@@ -56,6 +58,23 @@ public class SemesterServiceImpl implements SemesterService {
         return semesterRepository.findById(semesterId)
                 .map(this::toResponse)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Semester not found: " + semesterId));
+    }
+
+    @Override
+    public List<SemesterDtos.Response> getByBatch(Long batchId) {
+
+        List<Semester> semesters = semesterRepository.findByBatch_BatchId(batchId);
+
+        if (semesters.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "No semesters found for batchId: " + batchId
+            );
+        }
+
+        return semesters.stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override

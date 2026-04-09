@@ -8,18 +8,18 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
-import { T } from "../../component1/pages/StudentData";
+import { T } from "../pages/StudentPortal/StudentData";
 import {
   LayoutDashboard, BookOpen, ClipboardList, User, Sun, Moon,
   LogOut, Bell, ChevronDown, X, Menu, ChevronLeft, ChevronRight,
   BookMarked, Home,
 } from "lucide-react";
-import { SEED_NOTIFICATIONS } from "../../component1/pages/StudentData";
 
 const NAV_ITEMS = [
   { id: "dashboard",    label: "Dashboard",    icon: LayoutDashboard },
   { id: "resources",   label: "My Resources", icon: BookOpen         },
   { id: "requests",    label: "My Requests",  icon: ClipboardList    },
+  { id: "recomandations",    label: "Recomandations",  icon: ClipboardList    },
   { id: "profile",     label: "My Profile",   icon: User             },
 ];
 
@@ -32,12 +32,11 @@ export default function StudentLayout({ active, setActive, children }) {
   const [collapsed,       setCollapsed]       = useState(false);
   const [showProfile,     setShowProfile]     = useState(false);
   const [showNotif,       setShowNotif]       = useState(false);
-  const [notifs,          setNotifs]          = useState(SEED_NOTIFICATIONS);
+  
   const profileRef = useRef(null);
   const notifRef   = useRef(null);
 
-  const unread = notifs.filter(n => !n.read).length;
-
+  
   // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e) => {
@@ -64,7 +63,7 @@ export default function StudentLayout({ active, setActive, children }) {
     <div className={`flex h-screen overflow-hidden ${t.pageBg}`} style={{ fontFamily:"'DM Sans', system-ui, sans-serif" }}>
 
       {/* ── SIDEBAR ──────────────────────────────────────────── */}
-      <aside className={`${collapsed?"w-[68px]":"w-60"} shrink-0 flex flex-col ${t.sidebarBg} border-r ${t.sidebarBorder} transition-all duration-300 z-30`}>
+      <aside className={`${collapsed?"w-[95px]":"w-60"} shrink-0 flex flex-col ${t.sidebarBg} border-r ${t.sidebarBorder} transition-all duration-300 z-30`}>
 
         {/* Logo row */}
         <div className={`flex items-center h-16 px-4 border-b ${t.sidebarBorder} shrink-0 gap-3`}>
@@ -140,50 +139,7 @@ export default function StudentLayout({ active, setActive, children }) {
           {/* Right side */}
           <div className="flex items-center gap-2">
 
-            {/* Notifications bell */}
-            <div className="relative" ref={notifRef}>
-              <button onClick={() => { setShowNotif(p=>!p); setShowProfile(false); }}
-                className={`relative p-2 rounded-xl transition-colors ${t.sidebarItem}`}>
-                <Bell size={18}/>
-                {unread > 0 && (
-                  <span className="absolute top-1 right-1 h-2 w-2 bg-[#FFDE42] rounded-full"/>
-                )}
-              </button>
-
-              {/* Notif dropdown */}
-              {showNotif && (
-                <div className={`absolute top-12 right-0 w-80 ${t.cardBg} border ${t.cardBorder} rounded-2xl shadow-2xl overflow-hidden z-50`}>
-                  <div className={`flex items-center justify-between px-4 py-3 border-b ${t.divider}`}>
-                    <p className={`font-bold text-sm ${t.textPrimary}`}>Notifications</p>
-                    <div className="flex items-center gap-2">
-                      {unread>0 && <button onClick={markAllRead} className="text-[10px] text-[#53CBF3] hover:underline">Mark all read</button>}
-                      <button onClick={()=>setShowNotif(false)} className={`p-1 rounded-lg ${t.modalClose}`}><X size={13}/></button>
-                    </div>
-                  </div>
-                  <div className="max-h-72 overflow-y-auto">
-                    {notifs.length === 0 ? (
-                      <p className={`text-center py-8 text-sm ${t.textMuted}`}>No notifications</p>
-                    ) : notifs.map(n => (
-                      <div key={n.id} onClick={() => setNotifs(prev => prev.map(x => x.id===n.id?{...x,read:true}:x))}
-                        className={`px-4 py-3 border-b ${t.divider} cursor-pointer transition-colors ${t.rowHover} ${!n.read?isDark?"bg-[#5478FF]/5":"bg-blue-50/50":""}`}>
-                        <div className="flex items-start gap-3">
-                          <span className="text-lg leading-none mt-0.5">{notifTypeIcon[n.type]}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className={`text-xs font-bold ${n.read?t.textSecondary:notifColor[n.type]}`}>{n.title}</p>
-                              {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-[#5478FF] shrink-0"/>}
-                            </div>
-                            <p className={`text-xs mt-0.5 leading-snug ${t.textSecondary}`}>{n.body}</p>
-                            <p className={`text-[10px] mt-1 ${t.textMuted}`}>{n.time}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
+      
             {/* Profile button */}
             <div className="relative" ref={profileRef}>
               <button onClick={() => { setShowProfile(p=>!p); setShowNotif(false); }}

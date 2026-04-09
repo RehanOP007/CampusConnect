@@ -37,6 +37,11 @@ public class ProgramController {
         return programService.getById(programId);
     }
 
+    @GetMapping("/getByFaculty")
+    public List<ProgramDtos.Response> getByFaculty(@RequestParam Long facultyId) {
+        return programService.getByFacultyId(facultyId);
+    }
+
     @GetMapping("/all")
     public List<ProgramDtos.Response> getAll() {
         return programService.getAll();

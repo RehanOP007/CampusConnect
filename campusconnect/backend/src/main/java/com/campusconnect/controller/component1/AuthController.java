@@ -50,7 +50,14 @@ public class AuthController {
                 token,
                 user.getUserId(),
                 user.getUsername(),
-                user.getRole().getRoleName()
+                user.getEmail(),
+                user.getRole().getRoleName(),
+                user.getStatus(),
+                user.getCampus() == null ? null : user.getCampus().getCampusId(),
+                user.getFaculty() == null ? null : user.getFaculty().getFacultyId(),
+                user.getProgram() == null ? null : user.getProgram().getProgramId(),
+                user.getBatch() == null ? null : user.getBatch().getBatchId(),
+                user.getSemester() == null ? null : user.getSemester().getSemesterId()
         );
         
     }

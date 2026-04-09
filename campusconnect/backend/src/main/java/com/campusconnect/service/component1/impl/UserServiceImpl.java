@@ -45,9 +45,11 @@ public class UserServiceImpl implements UserService {
 
             Role role = roleRepository.findById(request.roleId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found"));
-            String roleName = role.getRoleName().toUpperCase();
             
-                    if (!roleName.equals("ADMIN")) {
+                    String roleName = role.getRoleName().toUpperCase();
+
+                    // ✅ STUDENT → all required
+                    if (roleName.equals("STUDENT")) {
 
                         if (request.batchId() == null) {
                             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Batch is required");
@@ -65,6 +67,16 @@ public class UserServiceImpl implements UserService {
                             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Semester is required");
                         }
                     }
+
+                    // ✅ BATCH REP → only batch required
+                    if (roleName.equals("BATCH_REP")) {
+
+                        if (request.batchId() == null) {
+                            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Batch is required");
+                        }
+                    }
+
+                    // ✅ ADMIN → nothing required (no validation needed)
 
             boolean isBatchRep = role.getRoleName().equalsIgnoreCase("BATCHREP");
 
@@ -108,14 +120,24 @@ public class UserServiceImpl implements UserService {
             if (userRepository.existsByEmail(request.email())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
             }
-            Program program = programRepository.findById(request.programId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Program not found"));
+            Program program = null;
+            Faculty faculty = null;
+            Semester semester = null;
 
-            Faculty faculty = facultyRepository.findById(request.facultyId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Faculty not found"));
+            if (request.programId() != null) {
+                program = programRepository.findById(request.programId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Program not found"));
+            }
 
-            Semester semester = semesterRepository.findById(request.semesterId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Semester not found"));
+            if (request.facultyId() != null) {
+                faculty = facultyRepository.findById(request.facultyId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Faculty not found"));
+            }
+
+            if (request.semesterId() != null) {
+                semester = semesterRepository.findById(request.semesterId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Semester not found"));
+            }
 
             User user = new User();
             user.setFirstName(request.firstName());

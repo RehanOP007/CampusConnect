@@ -7,10 +7,10 @@ export const getDefaultRoute = (roles) => {
       return "/campusconnect/admin-dashboard";
 
     case "batchrep":
-      return  `/batchrep/dashboard`;
+      return  `/campusconnect/batchrep-dashboard`;
 
     case "student":
-      return `/student/dashboard`;
+      return `/campusconnect/student-dashboard`;
 
     default:
       return "/campusconnect/login";

@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -88,13 +89,16 @@ public class ResourceServiceImpl implements ResourceService {
 
         // replace files
         if (request.fileUrls() != null) {
+
             List<ResourceFile> files = request.fileUrls().stream().map(url -> {
                 ResourceFile file = new ResourceFile();
                 file.setFileUrl(url);
                 file.setResource(resource);
                 return file;
-            }).toList();
-            resource.setFiles(files);
+            }).collect(Collectors.toList());
+
+            resource.getFiles().clear(); 
+            resource.getFiles().addAll(files);
         }
 
         return toResponse(resourceRepository.save(resource));

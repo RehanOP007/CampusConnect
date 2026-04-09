@@ -14,6 +14,9 @@ import Sidebar from "../components/SideBar";
 import SectionUsers from "./SectionUsers";
 import SectionRequests from "./SectionRequests";
 import SectionBatchReps from "./SectionBatchReps";
+import SectionEntities from "../../component2/pages/SectionEntites";
+import AnalyticsDashboard from "../../Component4/pages/Analyticsdashboard";
+import { ConfirmModal, ToastPopup } from "../components/AdminUiComponents";
 import myImage from "../../assets/sliit_logo.png";
 import sliitBg from "../../assets/sliit.jpg";
 
@@ -283,44 +286,9 @@ const ThemedField = ({ label, name, value, onChange, type="text", options, requi
   );
 };
 
-const ConfirmModal = ({ open, onClose, onConfirm, title, message, confirmLabel="Confirm", variant="primary", isDark }) => {
-  if(!open)return null;
-  const t = T(isDark);
-  const btnCls = variant==="danger"?"bg-red-500 hover:bg-red-600 text-white":variant==="success"?"bg-emerald-500 hover:bg-emerald-600 text-white":"bg-[#5478FF] hover:bg-[#4060ee] text-white";
-  return (
-    <>
-      <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"/>
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-        <div className={`w-full max-w-sm ${t.confirmBg} rounded-2xl shadow-2xl border ${t.cardBorder} overflow-hidden`}>
-          <div className="px-6 pt-6 pb-4">
-            <div className={`h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-3 ${variant==="danger"?"bg-red-100":"bg-blue-100"}`}>
-              {variant==="danger"?<AlertTriangle size={22} className="text-red-600"/>:<Info size={22} className="text-blue-600"/>}
-            </div>
-            <h3 className={`font-bold text-base text-center ${t.textPrimary}`}>{title}</h3>
-            <p className={`text-sm text-center mt-1 ${t.textSecondary}`}>{message}</p>
-          </div>
-          <div className="px-6 pb-6 flex gap-3">
-            <button onClick={onClose} className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-semibold ${t.cardBorder} ${t.textSecondary} hover:opacity-80`}>Cancel</button>
-            <button onClick={onConfirm} className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${btnCls}`}>{confirmLabel}</button>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
 
-const ToastPopup = ({ show, message, type="success", onClose }) => {
-  useEffect(()=>{ if(show){ const t=setTimeout(onClose,3500); return()=>clearTimeout(t); } },[show,onClose]);
-  if(!show)return null;
-  const styles = { success:"bg-emerald-600",error:"bg-red-600",info:"bg-[#5478FF]",warning:"bg-amber-500" };
-  const icons  = { success:<CheckCircle size={16}/>,error:<XCircle size={16}/>,info:<Info size={16}/>,warning:<AlertTriangle size={16}/> };
-  return (
-    <div className={`fixed top-5 right-5 z-[70] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-white ${styles[type]}`}>
-      {icons[type]}<span className="text-sm font-semibold">{message}</span>
-      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100"><X size={14}/></button>
-    </div>
-  );
-};
+
+
 
 const DARK_THEME_DIALOG = { statBg:"bg-[#111B3D]", border:"border-[#2B3E7A]", statText:"text-sky-300", cardBg:"bg-[#0B1230]" };
 
@@ -388,134 +356,7 @@ const STATUS_FLOW={PENDING:{next:["APPROVED","REJECTED"]},APPROVED:{next:[]},REJ
 // ═══════════════════════════════════════════════════════════════════
 // SECTION: ENTITIES
 // ═══════════════════════════════════════════════════════════════════
-const SectionEntities = ({ notify, isDark }) => {
-  const t=T(isDark);
-  const logoInputRef=useRef(null);
-  const[editing,setEditing]=useState(false);
-  const[logoSrc,setLogoSrc]=useState(null);
-  const[campus,setCampus]=useState({name:"Sri Lanka Institute of Information Technology",shortName:"SLIIT",established:"1999",type:"Non-state Degree-Awarding Institute",address:"New Kandy Rd, Malabe 10115, Sri Lanka",phone:"+94 11 754 4801",fax:"+94 11 754 4802",email:"info@sliit.lk",web:"www.sliit.lk",students:"16,000+",staff:"800+",accreditation:"UGC Approved",vision:"To be the leading technological university in Sri Lanka."});
-  const[draft,setDraft]=useState({...campus});
-  const[saveConfirm,setSaveConfirm]=useState(false);
-  const[toast,setToast]=useState({show:false,message:"",type:"success"});
-  const showToast=(msg,type="success")=>setToast({show:true,message:msg,type});
-  const hd=(e)=>setDraft(p=>({...p,[e.target.name]:e.target.value}));
-  const doSave=()=>{setCampus({...draft});setEditing(false);setSaveConfirm(false);showToast("Campus details updated!");};
-  const handleLogoChange=(e)=>{const file=e.target.files?.[0];if(!file)return;const r=new FileReader();r.onload=(ev)=>setLogoSrc(ev.target.result);r.readAsDataURL(file);};
-  const[faculties,setFaculties]=useState(INITIAL_FACULTIES);const[facModal,setFacModal]=useState(null);const[facForm,setFacForm]=useState("");const[facConfirm,setFacConfirm]=useState(null);
-  const saveFaculty=()=>{if(!facForm.trim())return;if(facModal.mode==="add")setFaculties(p=>[...p,facForm.trim()]);else setFaculties(p=>p.map((f,i)=>i===facModal.idx?facForm.trim():f));showToast(`Faculty ${facModal.mode==="add"?"added":"updated"}!`);setFacModal(null);setFacForm("");};
-  const deleteFaculty=(idx)=>{setFaculties(p=>p.filter((_,i)=>i!==idx));showToast("Faculty deleted.","info");setFacConfirm(null);};
-  const[programs,setPrograms]=useState(INITIAL_PROGRAMS);const[progModal,setProgModal]=useState(null);const[progForm,setProgForm]=useState({name:"",faculty:"Computing",duration:"4 yrs"});const[progConfirm,setProgConfirm]=useState(null);
-  const hp=(e)=>setProgForm(p=>({...p,[e.target.name]:e.target.value}));
-  const saveProgram=()=>{if(!progForm.name.trim())return;if(progModal.mode==="add")setPrograms(p=>[...p,{...progForm}]);else setPrograms(p=>p.map((pr,i)=>i===progModal.idx?{...progForm}:pr));showToast(`Program ${progModal.mode==="add"?"added":"updated"}!`);setProgModal(null);};
-  const deleteProgram=(idx)=>{setPrograms(p=>p.filter((_,i)=>i!==idx));showToast("Program deleted.","info");setProgConfirm(null);};
-  const EntityModal=({open,onClose,title,children})=>{useEffect(()=>{if(!open)return;const h=(e)=>e.key==="Escape"&&onClose();window.addEventListener("keydown",h);return()=>window.removeEventListener("keydown",h);},[open,onClose]);if(!open)return null;return(<><div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={onClose}/><div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"><div className={`pointer-events-auto w-full max-w-md ${t.modalBg} rounded-2xl shadow-2xl overflow-hidden border`}><div className={`flex items-center justify-between px-5 py-4 border-b ${t.modalHeader}`}><p className={`font-bold text-sm ${t.textPrimary}`}>{title}</p><button onClick={onClose} className={`p-1 rounded-lg ${t.modalClose}`}><X size={15}/></button></div><div className="px-5 py-4">{children}</div></div></div></>);};
-  const InfoRow=({icon:Icon,label,value,cls="text-sky-500"})=>(<div className="flex items-start gap-3"><div className={`mt-0.5 shrink-0 ${cls}`}><Icon size={14}/></div><div><p className={`text-[10px] font-bold uppercase tracking-wider ${t.textMuted}`}>{label}</p><p className={`text-sm font-semibold leading-tight ${t.textPrimary}`}>{value}</p></div></div>);
-  const CampusField=({label,name,value,onChange,textarea=false})=>(<div><label className={`block text-[10px] font-bold uppercase tracking-wider mb-1 ${t.textMuted}`}>{label}</label>{textarea?<textarea name={name} value={value} onChange={onChange} rows={2} className={`w-full p-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5478FF]/40 resize-none ${t.inputBg}`}/>:<input name={name} value={value} onChange={onChange} className={`w-full p-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5478FF]/40 ${t.inputBg}`}/>}</div>);
-  const effectiveLogo=logoSrc||myImage;
-  const CHIP_COLORS=[{c:"text-sky-400 bg-sky-500/15 border-sky-500/40"},{c:"text-purple-400 bg-purple-500/15 border-purple-500/40"},{c:"text-amber-400 bg-amber-500/15 border-amber-500/40"},{c:"text-teal-400 bg-teal-500/15 border-teal-500/40"}];
-  const CHIP_COLORS_L=[{c:"text-sky-700 bg-sky-50 border-sky-200"},{c:"text-purple-700 bg-purple-50 border-purple-200"},{c:"text-amber-700 bg-amber-50 border-amber-200"},{c:"text-teal-700 bg-teal-50 border-teal-200"}];
-  const chips=[{label:"Students",value:campus.students},{label:"Staff",value:campus.staff},{label:"Faculties",value:faculties.length},{label:"Programs",value:programs.length}];
 
-  return (
-    <div className={`space-y-6 ${t.pageBg} min-h-screen p-6`}>
-      <ToastPopup show={toast.show} message={toast.message} type={toast.type} onClose={()=>setToast(p=>({...p,show:false}))}/>
-      <div className={`${t.cardBg} rounded-2xl border ${t.cardBorder} shadow-sm overflow-hidden`}>
-        <div className="h-28 relative bg-center bg-cover" style={{backgroundImage:`url(${sliitBg})`,backgroundPosition:"center 45%"}}>
-          <div className="absolute inset-0 bg-black/40"/>
-          {!editing&&<button onClick={()=>{setDraft({...campus});setEditing(true);}} className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 bg-black/50 hover:bg-black/70 text-white rounded-xl text-xs font-bold backdrop-blur-md border border-white/20"><Pencil size={12}/>Edit Details</button>}
-        </div>
-        <div className="px-6 pb-6 pt-2">
-          <div className="flex items-end gap-4 -mt-12 mb-5">
-            <div className="relative group shrink-0">
-              <div className="h-24 w-24 rounded-2xl bg-white border-4 border-white shadow-xl overflow-hidden flex items-center justify-center"><img src={effectiveLogo} alt="SLIIT Logo" className="h-full w-full object-contain p-1" onError={e=>{e.target.onerror=null;e.target.src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%235478FF' rx='12'/%3E%3Ctext x='40' y='52' font-size='22' text-anchor='middle' fill='white' font-weight='bold'%3ESL%3C/text%3E%3C/svg%3E";}}/></div>
-              <button onClick={()=>logoInputRef.current?.click()} className="absolute inset-0 rounded-2xl bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><div className="text-white text-center"><Camera size={18} className="mx-auto"/><span className="text-[9px] font-bold block mt-0.5">Change</span></div></button>
-              <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange}/>
-            </div>
-            <div className="pb-1 flex-1 min-w-0">
-              <h2 className={`font-black text-xl leading-tight ${t.textPrimary}`}>{campus.name}</h2>
-              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                <span className="text-xs font-bold text-[#5478FF] bg-[#5478FF]/15 px-2.5 py-0.5 rounded-full border border-[#5478FF]/40">{campus.shortName}</span>
-                <span className={`text-xs ${t.textSecondary}`}>Est. {campus.established}</span>
-                <span className="text-xs font-semibold text-emerald-500 bg-emerald-500/15 px-2.5 py-0.5 rounded-full border border-emerald-500/40">{campus.accreditation}</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-3 mb-6 flex-wrap">
-            {chips.map((s,i)=>{const c=isDark?CHIP_COLORS[i].c:CHIP_COLORS_L[i].c;return(<div key={s.label} className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${c}`}><span className={`text-2xl font-black`}>{s.value}</span><span className="text-[10px] font-bold uppercase tracking-wider opacity-80">{s.label}</span></div>);})}
-          </div>
-          {!editing&&(<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <InfoRow icon={MapPin}        label="Address" value={campus.address}/>
-            <InfoRow icon={Phone}         label="Phone"   value={campus.phone}   cls="text-sky-500"/>
-            <InfoRow icon={Mail}          label="Email"   value={campus.email}   cls="text-purple-500"/>
-            <InfoRow icon={Globe}         label="Website" value={campus.web}     cls="text-teal-500"/>
-            <InfoRow icon={Building2}     label="Type"    value={campus.type}    cls="text-[#5478FF]"/>
-            <InfoRow icon={GraduationCap} label="Vision"  value={campus.vision}  cls="text-amber-500"/>
-          </div>)}
-          {editing&&(<div className={`${t.innerBg} rounded-2xl border ${t.innerBorder} p-5`}>
-            <p className={`text-xs font-black uppercase tracking-wider mb-4 flex items-center gap-1.5 ${t.textMuted}`}><Edit3 size={12}/>Editing Campus Details</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <CampusField label="Full Name" name="name" value={draft.name} onChange={hd}/><CampusField label="Short Name" name="shortName" value={draft.shortName} onChange={hd}/>
-              <CampusField label="Established" name="established" value={draft.established} onChange={hd}/><CampusField label="Inst. Type" name="type" value={draft.type} onChange={hd}/>
-              <CampusField label="Phone" name="phone" value={draft.phone} onChange={hd}/><CampusField label="Fax" name="fax" value={draft.fax} onChange={hd}/>
-              <CampusField label="Email" name="email" value={draft.email} onChange={hd}/><CampusField label="Website" name="web" value={draft.web} onChange={hd}/>
-              <CampusField label="Students" name="students" value={draft.students} onChange={hd}/><CampusField label="Staff" name="staff" value={draft.staff} onChange={hd}/>
-              <CampusField label="Accreditation" name="accreditation" value={draft.accreditation} onChange={hd}/>
-            </div>
-            <CampusField label="Address" name="address" value={draft.address} onChange={hd}/>
-            <div className="mt-3"><CampusField label="Vision Statement" name="vision" value={draft.vision} onChange={hd} textarea/></div>
-            <div className={`mt-4 p-3 ${t.cardBg} rounded-xl border ${t.cardBorder} flex items-center gap-4`}>
-              <img src={effectiveLogo} alt="logo" className="h-12 w-12 object-contain rounded-xl border border-white/10 p-1"/>
-              <div><p className={`text-xs font-bold mb-1 ${t.textPrimary}`}>Campus Logo</p><button onClick={()=>logoInputRef.current?.click()} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#5478FF] text-white rounded-xl text-xs font-bold hover:bg-[#4060ee]"><Upload size={12}/>Upload</button></div>
-            </div>
-            <div className="flex justify-end gap-2 mt-4">
-              <button onClick={()=>setEditing(false)} className={`px-4 py-2 rounded-xl border text-sm font-semibold ${t.cardBorder} ${t.textSecondary} hover:opacity-80`}>Cancel</button>
-              <button onClick={()=>setSaveConfirm(true)} className="px-4 py-2 rounded-xl bg-[#5478FF] text-white text-sm font-semibold hover:bg-[#4060ee] shadow-sm">Save Changes</button>
-            </div>
-          </div>)}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className={`${t.cardBg} rounded-2xl border ${t.cardBorder} shadow-sm overflow-hidden`}>
-          <div className={`flex items-center justify-between px-5 py-4 border-b ${t.divider}`}>
-            <div className="flex items-center gap-2.5"><div className="h-8 w-8 rounded-xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center"><GraduationCap size={16} className="text-amber-500"/></div><div><p className={`font-bold text-sm ${t.textPrimary}`}>Faculties</p><p className={`text-[10px] ${t.textMuted}`}>{faculties.length} registered</p></div></div>
-            <button onClick={()=>{setFacForm("");setFacModal({mode:"add"});}} className="flex items-center gap-1 px-3 py-1.5 bg-[#5478FF] text-white rounded-xl text-xs font-bold hover:bg-[#4060ee] shadow-sm"><Plus size={12}/>Add</button>
-          </div>
-          <div className="p-4 space-y-2">
-            {faculties.length===0?<p className={`text-center text-sm py-6 ${t.textMuted}`}>No faculties</p>
-            :faculties.map((f,i)=>(<div key={i} className={`flex items-center justify-between px-4 py-3 ${t.innerBg} rounded-xl border ${t.innerBorder} hover:border-amber-400/50 transition-all group`}><div className="flex items-center gap-3"><span className="h-2 w-2 rounded-full bg-amber-500 shrink-0"/><span className={`text-sm font-semibold ${t.textPrimary}`}>{f}</span></div><div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={()=>{setFacForm(f);setFacModal({mode:"edit",idx:i});}} className="p-1.5 rounded-lg text-sky-500 hover:bg-sky-500/10"><Pencil size={13}/></button><button onClick={()=>setFacConfirm(i)} className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10"><Trash2 size={13}/></button></div></div>))}
-          </div>
-        </div>
-        <div className={`${t.cardBg} rounded-2xl border ${t.cardBorder} shadow-sm overflow-hidden`}>
-          <div className={`flex items-center justify-between px-5 py-4 border-b ${t.divider}`}>
-            <div className="flex items-center gap-2.5"><div className="h-8 w-8 rounded-xl bg-purple-500/15 border border-purple-500/40 flex items-center justify-center"><BookOpen size={16} className="text-purple-500"/></div><div><p className={`font-bold text-sm ${t.textPrimary}`}>Programs</p><p className={`text-[10px] ${t.textMuted}`}>{programs.length} registered</p></div></div>
-            <button onClick={()=>{setProgForm({name:"",faculty:faculties[0]??"Computing",duration:"4 yrs"});setProgModal({mode:"add"});}} className="flex items-center gap-1 px-3 py-1.5 bg-[#5478FF] text-white rounded-xl text-xs font-bold hover:bg-[#4060ee] shadow-sm"><Plus size={12}/>Add</button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead><tr className={`${t.tableHead} text-[10px] uppercase tracking-wider border-b ${t.divider}`}>{["Program","Faculty","Duration","Actions"].map(h=><th key={h} className="px-4 py-2.5 text-left font-semibold">{h}</th>)}</tr></thead>
-              <tbody>
-                {programs.length===0?<tr><td colSpan={4} className={`py-8 text-center text-sm ${t.textMuted}`}>No programs</td></tr>
-                :programs.map((p,i)=>(<tr key={i} className={`border-t ${t.divider} ${i%2===1?t.rowAlt:""} ${t.rowHover} transition-colors group`}>
-                  <td className="px-4 py-2.5"><div className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-purple-500 shrink-0"/><span className={`font-semibold text-xs ${t.textPrimary}`}>{p.name}</span></div></td>
-                  <td className="px-4 py-2.5"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">{p.faculty}</span></td>
-                  <td className={`px-4 py-2.5 text-xs ${t.textSecondary}`}>{p.duration}</td>
-                  <td className="px-4 py-2.5"><div className="flex gap-1 opacity-0 group-hover:opacity-100"><button onClick={()=>{setProgForm({...p});setProgModal({mode:"edit",idx:i});}} className="p-1.5 rounded-lg text-sky-500 hover:bg-sky-500/10"><Pencil size={12}/></button><button onClick={()=>setProgConfirm(i)} className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10"><Trash2 size={12}/></button></div></td>
-                </tr>))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <ConfirmModal isDark={isDark} open={saveConfirm} onClose={()=>setSaveConfirm(false)} onConfirm={doSave} title="Save Changes?" message="Update campus details?" confirmLabel="Yes, Save"/>
-      <EntityModal open={!!facModal} onClose={()=>setFacModal(null)} title={facModal?.mode==="add"?"Add Faculty":"Edit Faculty"}><div className="mb-4"><label className={`block text-xs font-semibold mb-1.5 ${t.textSecondary}`}>Faculty Name *</label><input value={facForm} onChange={e=>setFacForm(e.target.value)} placeholder="e.g. Computing" className={`w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5478FF]/40 ${t.inputBg}`}/></div><div className="flex justify-end gap-2"><button onClick={()=>setFacModal(null)} className={`px-4 py-2 rounded-xl border text-sm font-semibold ${t.cardBorder} ${t.textSecondary} hover:opacity-80`}>Cancel</button><button onClick={saveFaculty} className="px-4 py-2 rounded-xl bg-[#5478FF] text-white text-sm font-semibold hover:bg-[#4060ee]">Save</button></div></EntityModal>
-      <EntityModal open={!!progModal} onClose={()=>setProgModal(null)} title={progModal?.mode==="add"?"Add Program":"Edit Program"}><div className="mb-3"><label className={`block text-xs font-semibold mb-1.5 ${t.textSecondary}`}>Program Name *</label><input name="name" value={progForm.name} onChange={hp} placeholder="e.g. Software Engineering" className={`w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5478FF]/40 ${t.inputBg}`}/></div><div className="mb-3"><label className={`block text-xs font-semibold mb-1.5 ${t.textSecondary}`}>Faculty *</label><select name="faculty" value={progForm.faculty} onChange={hp} className={`w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5478FF]/40 ${t.inputBg}`}>{faculties.map(f=><option key={f} value={f}>{f}</option>)}</select></div><div className="mb-4"><label className={`block text-xs font-semibold mb-1.5 ${t.textSecondary}`}>Duration</label><select name="duration" value={progForm.duration} onChange={hp} className={`w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5478FF]/40 ${t.inputBg}`}>{["1 yr","2 yrs","3 yrs","4 yrs","5 yrs"].map(d=><option key={d} value={d}>{d}</option>)}</select></div><div className="flex justify-end gap-2"><button onClick={()=>setProgModal(null)} className={`px-4 py-2 rounded-xl border text-sm font-semibold ${t.cardBorder} ${t.textSecondary} hover:opacity-80`}>Cancel</button><button onClick={saveProgram} className="px-4 py-2 rounded-xl bg-[#5478FF] text-white text-sm font-semibold hover:bg-[#4060ee]">Save</button></div></EntityModal>
-      <ConfirmModal isDark={isDark} open={facConfirm!==null} onClose={()=>setFacConfirm(null)} onConfirm={()=>deleteFaculty(facConfirm)} title="Delete Faculty" message={`Delete "${faculties[facConfirm]}"?`} confirmLabel="Yes, Delete" variant="danger"/>
-      <ConfirmModal isDark={isDark} open={progConfirm!==null} onClose={()=>setProgConfirm(null)} onConfirm={()=>deleteProgram(progConfirm)} title="Delete Program" message={`Delete "${programs[progConfirm]?.name}"?`} confirmLabel="Yes, Delete" variant="danger"/>
-    </div>
-  );
-};
 
 // ═══════════════════════════════════════════════════════════════════
 // SECTION: NOTIFICATIONS
@@ -868,10 +709,10 @@ const AdminDetailsPanel = ({ user, onClose, isDark }) => {
         <div className="h-16 bg-gradient-to-r from-[#111FA2] via-[#5478FF] to-[#A78BFA]"/>
         <div className="px-4 pb-4">
           <div className="-mt-8 mb-3"><div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[#5478FF] to-[#A78BFA] flex items-center justify-center text-white font-black text-xl border-4 border-[#111B3D] shadow-lg">{(user?.firstName??"S").charAt(0)}{(user?.lastName??"A").charAt(0)}</div></div>
-          <p className={`font-black text-base ${t.textPrimary}`}>{user?.firstName?`${user.firstName} ${user.lastName??""}`:"Super Admin"}</p>
-          <p className="text-sky-500 text-xs font-semibold">System Administrator</p>
+          <p className={`font-black text-base ${t.textPrimary}`}>{user?.firstName?`${user.firstName} ${user.lastName??""}`:user.username.toUpperCase()}</p>
+          <p className="text-sky-500 text-xs font-semibold">{user.username=="admin"? "System Administrator": user.username=='batch_rep'? 'Batch Reprasantative':'Student'}</p>
           <div className="mt-3 space-y-2">
-            {[{icon:Mail,label:"Email",val:user?.email??"superadmin@sliit.lk"},{icon:Shield,label:"Role",val:"Admin"},{icon:Building2,label:"Department",val:"ICT"}].map(f=>(
+            {[{icon:Mail,label:"Email",val:user.email},{icon:Shield,label:"Role",val:user.role}].map(f=>(
               <div key={f.label} className="flex items-center gap-2.5 py-1.5">
                 <div className={`h-6 w-6 rounded-lg bg-sky-500/15 flex items-center justify-center shrink-0`}><f.icon size={12} className="text-sky-500"/></div>
                 <div><p className={`text-[9px] font-bold uppercase tracking-wider leading-none ${t.textMuted}`}>{f.label}</p><p className={`text-xs font-semibold ${t.textPrimary}`}>{f.val}</p></div>
@@ -903,7 +744,7 @@ export default function Admin() {
   const handleLogout=()=>{setLogoutConfirm(false);setLogoutSuccessToast(true);setTimeout(()=>{logout?.();navigate("/campusconnect/admin",{replace:true});},2000);};
 
   const renderContent=()=>{switch(active){
-    case "dashboard":     return <div className={`h-[60vh] flex flex-col items-center justify-center gap-3 ${t.textMuted}`}><LayoutDashboard size={56}/><p className="font-bold text-base">Dashboard is empty</p></div>;
+    case "dashboard":     return <AnalyticsDashboard/>
     case "users":         return <SectionUsers         notify={notify} isDark={isDark}/>;
     case "batchreps":     return <SectionBatchReps     notify={notify} isDark={isDark}/>;
     case "requests":      return <SectionRequests      notify={notify} isDark={isDark}/>;
@@ -914,6 +755,7 @@ export default function Admin() {
     case "logs":          return <SectionLogs          isDark={isDark}/>;
     default:              return <div className={`text-center py-20 italic ${t.textMuted}`}>Section "{active}" coming soon…</div>;
   }};
+  //<div className={`h-[60vh] flex flex-col items-center justify-center gap-3 ${t.textMuted}`}><LayoutDashboard size={56}/><p className="font-bold text-base">Dashboard is empty</p></div>;
 
   return (
     <div className={`flex h-screen overflow-hidden ${t.pageBg}`}>
@@ -937,8 +779,8 @@ export default function Admin() {
             {notification.show&&<NotificationBanner show={notification.show} type={notification.type} message={notification.message} onClose={()=>setNotification({show:false,type:"info",message:""})}/>}
             <button onClick={()=>setShowAdminPanel(p=>!p)} className={`flex items-center gap-3 px-3 py-1.5 rounded-xl transition-colors ${isDark?"hover:bg-white/5":"hover:bg-gray-100"}`}>
               <div className="text-right hidden sm:block">
-                <p className={`text-xs font-bold leading-tight ${t.textPrimary}`}>{user?.firstName?`${user.firstName} ${user.lastName??""}`:"Super Admin"}</p>
-                <p className="text-sky-500 text-[10px] font-medium">System Administrator</p>
+                <p className={`text-xs font-bold leading-tight ${t.textPrimary}`}>{user?.firstName?`${user.firstName} ${user.lastName??""}`:user.username.toUpperCase()}</p>
+                <p className="text-sky-500 text-[10px] font-medium">{user.username=="admin"? "System Administrator": user.username=='batch_rep'? 'Batch Reprasantative':'Student'}</p>
               </div>
               <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-[#5478FF] to-[#A78BFA] border-2 border-[#5478FF]/50 flex items-center justify-center text-white text-xs font-black">
                 {(user?.firstName??"S").charAt(0)}{(user?.lastName??"A").charAt(0)}

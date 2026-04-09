@@ -1,6 +1,7 @@
 package com.campusconnect.service.component2.impl;
 
 import com.campusconnect.dto.component2.CurriculumDtos;
+import com.campusconnect.dto.component2.ProgramDtos;
 import com.campusconnect.entity.component2.Curriculum;
 import com.campusconnect.entity.component2.Program;
 import com.campusconnect.repository.component2.CurriculumRepository;
@@ -54,6 +55,23 @@ public class CurriculumServiceImpl implements CurriculumService {
         return curriculumRepository.findById(curriculumId)
                 .map(this::toResponse)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curriculum not found: " + curriculumId));
+    }
+
+    @Override
+    public List<CurriculumDtos.Response> getByProgram(Long programId) {
+
+        List<Curriculum> curriculum = curriculumRepository.findByProgram_ProgramId(programId);
+
+        if (curriculum.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "No curriculum found for programId: " + programId
+            );
+        }
+
+        return curriculum.stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override

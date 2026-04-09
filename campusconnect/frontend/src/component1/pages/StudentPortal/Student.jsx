@@ -6,11 +6,12 @@
  */
 
 import { useState } from "react";
-import StudentLayout  from "../components/StudentLayout";
-import DashboardPage  from "../../component1/pages/DashboardPage";
-import ResourcesPage  from "../../component1/pages/ResourcesPage";
-import RequestsPage   from "../../component1/pagesRequestsPage";
-import ProfilePage    from "../../component1/pages/ProfilePage";
+import StudentLayout  from "../../components/StudentLayout";
+import DashboardPage  from "./DashboardPage";
+import ResourcesPage  from "../../../component2/pages/ResourcesPage";
+import RequestsPage   from "./RequestsPage";
+import ProfilePage    from "./ProfilePage";
+import Recommendations from "../../../Component4/pages/Recommendations";
 
 export default function StudentPortal() {
   const [active, setActive]         = useState("dashboard");
@@ -26,7 +27,9 @@ export default function StudentPortal() {
       case "dashboard": return <DashboardPage setActive={setActive} onNavigate={handleNavigate}/>;
       case "resources": return <ResourcesPage subjectContext={subjectContext} setSubjectContext={setSubjectContext}/>;
       case "requests":  return <RequestsPage />;
+      case "recomandations":   return <Recommendations  />;
       case "profile":   return <ProfilePage  />;
+      
       default:          return <DashboardPage setActive={setActive} onNavigate={handleNavigate}/>;
     }
   };

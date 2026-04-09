@@ -13,6 +13,8 @@ public interface BatchService {
 
     List<BatchDtos.Response> getAll();
 
+    List<BatchDtos.Response> getByCurriculum(Long curriculumId);
+
     void delete(Long batchId);
 }
 

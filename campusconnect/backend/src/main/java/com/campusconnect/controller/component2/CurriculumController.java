@@ -38,6 +38,11 @@ public class CurriculumController {
         return curriculumService.getAll();
     }
 
+    @GetMapping("/getByProgram")
+    public List<CurriculumDtos.Response> getByProgram(@RequestParam Long programId) {
+        return curriculumService.getByProgram(programId);
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/delete")
     public void delete(@RequestParam Long curriculumId) {
