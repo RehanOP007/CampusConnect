@@ -36,6 +36,15 @@ public class StudyGroupServiceImpl implements StudyGroupService {
 
         User createdBy = userRepository.findById(request.createdByUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + request.createdByUserId()));
+        
+        if (createdBy.getRole() != null &&
+                "STUDENT".equalsIgnoreCase(createdBy.getRole().getRoleName())) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.FORBIDDEN,
+                        "Access Denied: Students cannot create study groups"
+                );
+        } 
 
         StudyGroup group = new StudyGroup();
         group.setGroupName(request.groupName());

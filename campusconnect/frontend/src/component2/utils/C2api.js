@@ -183,3 +183,40 @@ export const getResourcesBySubject = (subjectId) => {
 export const deleteResource = (id) => {
   return api.delete(`/api/resources/delete?resourceId=${id}`);
 };
+
+// ✅ 1. Create or Update Rating
+export const createOrUpdateRating = (data) => {
+    return api.post("/api/ratings", data);
+};
+
+// ✅ 2. Get Rating by ID
+export const getRatingById = (id) => {
+    return api.get(`/api/ratings/${id}`);
+};
+
+// ✅ 3. Get Ratings by Entity
+export const getRatingsByEntity = (entityType, entityId) => {
+    return api.get("/api/ratings/entity", {
+        params: { entityType, entityId }
+    });
+};
+
+// ✅ 4. Get Ratings by User
+export const getRatingsByUser = (userId) => {
+    return api.get(`/api/ratings/user/${userId}`);
+};
+
+// ✅ 5. Get All Ratings
+export const getAllRatings = () => {
+    return api.get("/api/ratings");
+};
+
+// ✅ 6. Delete Rating
+export const deleteRating = (id) => {
+    return api.delete(`/api/ratings/${id}`);
+};
+
+// ✅ 7. Get Rating Summary (Average & Count) for an Entity
+export const getRatingSummary = (entityType, entityId) => {
+  return api.get(`/api/ratings/summary?entityType=${entityType}&entityId=${entityId}`);
+};

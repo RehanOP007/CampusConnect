@@ -1,6 +1,7 @@
 package com.campusconnect.service.component4.impl;
 
 import com.campusconnect.dto.component4.RatingDtos;
+import com.campusconnect.dto.component4.RecommendationDtos;
 import com.campusconnect.entity.component1.User;
 import com.campusconnect.entity.component4.*;
 import com.campusconnect.repository.component1.UserRepository;
@@ -16,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -75,28 +77,41 @@ public class RatingServiceImpl implements RatingService {
     // ================= SUMMARY UPDATE =================
     private void updateSummary(Rating.RatingType type, Long entityId) {
 
-        EntityRatingSummaryId id = new EntityRatingSummaryId(type, entityId);
+    EntityRatingSummaryId id = new EntityRatingSummaryId(type, entityId);
 
-        // 🔥 Optimized query (AVG + COUNT)
-        Object[] result = ratingRepository.getSummary(type, entityId);
+    Object resultObj = ratingRepository.getSummary(type, entityId);
 
-        double avg = result[0] != null ? ((Double) result[0]) : 0.0;
-        long count = result[1] != null ? ((Long) result[1]) : 0;
+    double avg = 0.0;
+    long count = 0;
 
-        if (count == 0) {
-            summaryRepository.deleteById(id);
-            return;
+    if (resultObj != null) {
+        Object[] tuple;
+
+        // 🔥 Handle BOTH cases
+        if (resultObj instanceof Object[]) {
+            tuple = (Object[]) resultObj;
+        } else {
+            tuple = new Object[]{ resultObj };
         }
 
-        EntityRatingSummary summary = summaryRepository
-                .findById(id)
-                .orElse(new EntityRatingSummary(id, 0.0, 0));
+        if (tuple.length > 0 && tuple[0] != null) {
+            avg = ((Number) tuple[0]).doubleValue();
+        }
 
-        summary.setAverageRating(avg);
-        summary.setTotalRatings((int) count);
-
-        summaryRepository.save(summary);
+        if (tuple.length > 1 && tuple[1] != null) {
+            count = ((Number) tuple[1]).longValue();
+        }
     }
+
+    EntityRatingSummary summary = summaryRepository
+            .findById(id)
+            .orElse(new EntityRatingSummary(id, 0.0, 0));
+
+    summary.setAverageRating(avg);
+    summary.setTotalRatings((int) count);
+
+    summaryRepository.save(summary);
+}
 
     // ================= GET BY ID =================
     @Override
@@ -147,6 +162,56 @@ public class RatingServiceImpl implements RatingService {
 
         // ✅ Update summary after delete
         updateSummary(rating.getEntityType(), rating.getEntityId());
+    }
+
+    @Override
+    public Map<String, Object> getSummary(Rating.RatingType type, Long entityId) {
+
+            EntityRatingSummaryId id = new EntityRatingSummaryId(type, entityId);
+
+        EntityRatingSummary summary = summaryRepository.findById(id)
+                .orElse(null);
+
+        if (summary == null) {
+            return Map.of(
+                    "averageRating", 0.0,
+                    "totalRatings", 0
+            );
+        }
+
+        return Map.of(
+                "averageRating", summary.getAverageRating(),
+                "totalRatings", summary.getTotalRatings()
+        );
+    }
+
+    @Override
+    public List<RecommendationDtos> getTopResourcesBySubject(Long subjectId) {
+
+        List<Object[]> results = ratingRepository.findTopResourcesBySubject(subjectId);
+
+        return results.stream()
+            .map(r -> new RecommendationDtos(
+                Rating.RatingType.RESOURCE,
+                ((Number) r[0]).longValue(), // resourceId
+                ((Number) r[1]).doubleValue(),
+                ((Number) r[2]).longValue()
+            ))
+            .toList();
+    }
+
+    @Override
+    public List<RecommendationDtos> getTopSubjectsBySemester(Long semesterId) {
+
+        return ratingRepository.findTopSubjectsBySemester(semesterId)
+                .stream()
+                .map(r -> new RecommendationDtos(
+                        Rating.RatingType.SUBJECT,
+                        ((Number) r[0]).longValue(),
+                        ((Number) r[1]).doubleValue(),
+                        ((Number) r[2]).longValue()
+                ))
+                .toList();
     }
 
     // ================= MAPPER =================

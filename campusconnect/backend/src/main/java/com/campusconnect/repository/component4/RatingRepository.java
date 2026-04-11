@@ -22,10 +22,39 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
     );
 
     @Query("""
-    SELECT AVG(r.ratingValue), COUNT(r)
-    FROM Rating r
-    WHERE r.entityType = :type AND r.entityId = :entityId
-    """)
-    Object[] getSummary(@Param("type") Rating.RatingType type,
-                        @Param("entityId") Long entityId);
+        SELECT AVG(r.ratingValue), COUNT(r)
+        FROM Rating r
+        WHERE r.entityType = :type AND r.entityId = :entityId
+        """)
+        Object getSummary(@Param("type") Rating.RatingType type,
+                  @Param("entityId") Long entityId);
+
+    @Query("""
+        SELECT r.entityId,
+        AVG(r.ratingValue),
+        COUNT(r.ratingId)
+        FROM Rating r
+        JOIN Resource res ON res.resourceId = r.entityId
+        WHERE r.entityType = com.campusconnect.entity.component4.Rating.RatingType.RESOURCE
+        AND res.subject.subjectId = :subjectId
+        GROUP BY r.entityId
+        ORDER BY AVG(r.ratingValue) DESC
+        """)
+        List<Object[]> findTopResourcesBySubject(@Param("subjectId") Long subjectId);   
+
+    @Query("""
+        SELECT r.entityId,
+        AVG(r.ratingValue),
+        COUNT(r.ratingId)
+        FROM Rating r
+        WHERE r.entityType = com.campusconnect.entity.component4.Rating.RatingType.SUBJECT
+        AND r.entityId IN (
+        SELECT s.subjectId
+        FROM Subject s
+        WHERE s.semester.semesterId = :semesterId
+        )
+        GROUP BY r.entityId
+        ORDER BY AVG(r.ratingValue) DESC
+        """)
+        List<Object[]> findTopSubjectsBySemester(@Param("semesterId") Long semesterId);    
 }

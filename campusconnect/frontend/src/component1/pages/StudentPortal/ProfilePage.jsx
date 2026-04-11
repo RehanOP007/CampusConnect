@@ -4,14 +4,15 @@ import { useAuth }     from "../../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { T }           from "./StudentData";
 import { getUserById, updateUser } from "../../utils/C1api";
+import { getBatch, getFaculty, getSemester, getProgram } from "../../../component2/utils/C2api";
 import {
   User, Mail, Hash, Calendar, Building2, BookOpen,
   Pencil, Trash2, Key, Sun, Moon, ChevronDown, Save,
   X, Camera, LogOut, ShieldCheck, AlertTriangle,
-  Layers, GraduationCap, CheckCircle,
+  Layers, GraduationCap, CheckCircle, Loader2,
 } from "lucide-react";
 
-// ─── Status pill ────────────────────────────────────────────────
+// ─── Status pill ─────────────────────────────────────────────────
 const StatusPill = ({ status }) => (
   <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border
     ${status === "ACTIVE"
@@ -22,17 +23,30 @@ const StatusPill = ({ status }) => (
   </span>
 );
 
-// ─── Info tile ───────────────────────────────────────────────────
-const InfoTile = ({ icon: Icon, label, value, accent = "text-[#53CBF3]", t }) => (
+// ─── Info tile ────────────────────────────────────────────────────
+const InfoTile = ({ icon: Icon, label, value, accent = "text-[#53CBF3]", loading, t }) => (
   <div className={`${t.innerBg} rounded-xl p-3 border ${t.innerBorder}`}>
     <div className="flex items-center gap-1.5 mb-1">
       <Icon size={12} className={accent}/>
       <p className={`text-[10px] font-bold uppercase tracking-wider ${t.textMuted}`}>{label}</p>
     </div>
-    <p className={`text-sm font-semibold ${t.textPrimary}`}>{value || "—"}</p>
+    {loading
+      ? <div className={`h-3.5 w-3/5 rounded-full animate-pulse mt-1 ${t.innerBorder} bg-current opacity-20`}/>
+      : <p className={`text-sm font-semibold ${t.textPrimary}`}>{value || "—"}</p>
+    }
   </div>
 );
 
+// ─── Safe name picker ─────────────────────────────────────────────
+// Tries common field name patterns from the API response
+const pickName = (obj, ...keys) => {
+  for (const k of keys) {
+    if (obj?.[k] !== undefined && obj?.[k] !== null && obj?.[k] !== "") return String(obj[k]);
+  }
+  return null;
+};
+
+// ═══════════════════════════════════════════════════════════════════
 export default function ProfilePage() {
   const { isDark, toggleTheme } = useTheme();
   const { user, logout }        = useAuth();
@@ -40,25 +54,39 @@ export default function ProfilePage() {
   const t                       = T(isDark);
   const photoRef                = useRef(null);
 
-  const [profile,  setProfile]  = useState(null);
-  const [draft,    setDraft]    = useState(null);
-  const [editing,  setEditing]  = useState(false);
-  const [saving,   setSaving]   = useState(false);
-  const [photoSrc, setPhotoSrc] = useState(null);
-  const [modal,    setModal]    = useState(null);
-  const [passForm, setPassForm] = useState({ current:"", newPass:"", confirm:"" });
-  const [toast,    setToast]    = useState(null);
+  const [profile,      setProfile]      = useState(null);
+  const [draft,        setDraft]        = useState(null);
+  const [editing,      setEditing]      = useState(false);
+  const [saving,       setSaving]       = useState(false);
+  const [photoSrc,     setPhotoSrc]     = useState(null);
+  const [modal,        setModal]        = useState(null);
+  const [passForm,     setPassForm]     = useState({ current:"", newPass:"", confirm:"" });
+  const [toast,        setToast]        = useState(null);
+  const [loadingNames, setLoadingNames] = useState(false);
+
+  // Resolved names from entity APIs
+  const [entityNames, setEntityNames] = useState({
+    facultyName:  null,
+    programName:  null,
+    batchName:    null,
+    semesterYear: null,
+    semesterNumber: null,
+  });
 
   const inp = `w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5478FF]/30 ${t.inputBg}`;
 
-  // ── Load profile ──────────────────────────────────────────────
+  const showToast = (msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // ── Step 1: Load user ─────────────────────────────────────────
   useEffect(() => {
     if (!user?.userId) return;
     getUserById(user.userId)
       .then(res => {
         const u = res.data;
         const formatted = {
-          // Identity
           userId:     u.userId,
           firstName:  u.firstName  ?? "",
           lastName:   u.lastName   ?? "",
@@ -66,14 +94,12 @@ export default function ProfilePage() {
           studentId:  u.studentId  ?? "",
           email:      u.email      ?? "",
           status:     u.status     ?? "ACTIVE",
-          // IDs — shown as-is since API returns no names
           roleId:     u.roleId     ?? "",
           batchId:    u.batchId    ?? "",
           campusId:   u.campusId   ?? "",
           programId:  u.programId  ?? "",
           facultyId:  u.facultyId  ?? "",
           semesterId: u.semesterId ?? "",
-          // Timestamps
           createdAt:  u.createdAt  ?? "",
         };
         setProfile(formatted);
@@ -82,11 +108,33 @@ export default function ProfilePage() {
       .catch(() => showToast("Failed to load profile", "error"));
   }, [user]);
 
-  const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
-  };
+  // ── Step 2: Resolve entity names after profile loads ──────────
+  useEffect(() => {
+    if (!profile) return;
+    const { facultyId, programId, batchId, semesterId } = profile;
+    if (!facultyId && !programId && !batchId && !semesterId) return;
 
+    setLoadingNames(true);
+
+    const safe = (promise) => promise.catch(() => ({ data: null }));
+
+    Promise.all([
+      facultyId  ? safe(getFaculty(facultyId))   : Promise.resolve({ data: null }),
+      programId  ? safe(getProgram(programId))   : Promise.resolve({ data: null }),
+      batchId    ? safe(getBatch(batchId))        : Promise.resolve({ data: null }),
+      semesterId ? safe(getSemester(semesterId))  : Promise.resolve({ data: null }),
+    ]).then(([facRes, progRes, batRes, semRes]) => {
+      setEntityNames({
+        facultyName:  pickName(facRes?.data,  "facultyName",  "name", "faculty"),
+        programName:  pickName(progRes?.data, "programName",  "name", "program"),
+        batchName:    pickName(batRes?.data,  "batchName",    "name", "batch"),
+        semesterYear:   pickName(semRes?.data,  "yearNumber"),      // ← correct field
+        semesterNumber: pickName(semRes?.data,  "semesterNumber"),
+      });
+    }).finally(() => setLoadingNames(false));
+  }, [profile?.facultyId, profile?.programId, profile?.batchId, profile?.semesterId]);
+
+  // ── Helpers ───────────────────────────────────────────────────
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -97,15 +145,11 @@ export default function ProfilePage() {
 
   const saveEdit = async () => {
     if (!draft.firstName.trim() || !draft.lastName.trim()) {
-      showToast("First and last name are required", "error");
-      return;
+      showToast("First and last name are required", "error"); return;
     }
     setSaving(true);
     try {
-      await updateUser(user.userId, {
-        firstName: draft.firstName,
-        lastName:  draft.lastName,
-      });
+      await updateUser(user.userId, { firstName: draft.firstName, lastName: draft.lastName });
       setProfile({ ...draft });
       setEditing(false);
       showToast("Profile updated successfully!");
@@ -117,8 +161,8 @@ export default function ProfilePage() {
   };
 
   const handleChangePass = () => {
-    if (!passForm.newPass) { showToast("New password is required", "error"); return; }
-    if (passForm.newPass.length < 6) { showToast("Password must be at least 6 characters", "error"); return; }
+    if (!passForm.newPass)               { showToast("New password is required", "error"); return; }
+    if (passForm.newPass.length < 6)     { showToast("Password must be at least 6 characters", "error"); return; }
     if (passForm.newPass !== passForm.confirm) { showToast("Passwords do not match", "error"); return; }
     // TODO: call changePassword API
     showToast("Password changed successfully!");
@@ -126,6 +170,7 @@ export default function ProfilePage() {
     setPassForm({ current:"", newPass:"", confirm:"" });
   };
 
+  // ── Loading state ─────────────────────────────────────────────
   if (!profile) return (
     <div className={`min-h-full ${t.pageBg} flex items-center justify-center`}>
       <div className="flex flex-col items-center gap-3">
@@ -135,11 +180,20 @@ export default function ProfilePage() {
     </div>
   );
 
-  const initials = `${profile.firstName[0] ?? ""}${profile.lastName[0] ?? ""}`.toUpperCase() || "ST";
+  const initials   = `${profile.firstName[0] ?? ""}${profile.lastName[0] ?? ""}`.toUpperCase() || "ST";
   const joinedDate = profile.createdAt
     ? new Date(profile.createdAt).toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" })
     : "—";
 
+  // ── Resolved display values ───────────────────────────────────
+  const facultyDisplay  = entityNames.facultyName  ?? (profile.facultyId  ? `Faculty #${profile.facultyId}`  : "—");
+  const programDisplay  = entityNames.programName  ?? (profile.programId  ? `Program #${profile.programId}`  : "—");
+  const batchDisplay    = entityNames.batchName    ?? (profile.batchId    ? `Batch #${profile.batchId}`      : "—");
+  const semesterDisplay = entityNames.semesterYear && entityNames.semesterNumber
+  ? `Year ${entityNames.semesterYear} Semester ${entityNames.semesterNumber}`
+  : "—";
+
+  // ─────────────────────────────────────────────────────────────
   return (
     <div className={`min-h-full ${t.pageBg} p-6 space-y-6`}>
 
@@ -166,7 +220,6 @@ export default function ProfilePage() {
         <div className="px-6 pb-6">
           {/* Avatar + name row */}
           <div className="flex items-end gap-4 -mt-10 mb-6">
-            {/* Avatar */}
             <div className="relative group shrink-0">
               <div className="h-20 w-20 rounded-2xl bg-white border-4 border-[#111640] shadow-xl flex items-center justify-center overflow-hidden">
                 {photoSrc
@@ -181,7 +234,6 @@ export default function ProfilePage() {
               <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange}/>
             </div>
 
-            {/* Name block */}
             <div className="flex-1 pb-1 pt-12">
               <h2 className={`font-black text-lg leading-tight ${t.textPrimary}`}>
                 {profile.firstName} {profile.lastName}
@@ -196,7 +248,6 @@ export default function ProfilePage() {
               <p className={`text-[10px] mt-1 ${t.textMuted}`}>Member since {joinedDate}</p>
             </div>
 
-            {/* Edit / Delete buttons */}
             {!editing && (
               <div className="flex gap-2 pb-1 shrink-0">
                 <button onClick={() => { setDraft({ ...profile }); setEditing(true); }}
@@ -218,23 +269,28 @@ export default function ProfilePage() {
               <div>
                 <p className={`text-[10px] font-black uppercase tracking-widest mb-2 ${t.textMuted}`}>Personal</p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  <InfoTile icon={Mail}  label="Email"      value={profile.email}     t={t}/>
-                  <InfoTile icon={Hash}  label="Student ID" value={profile.studentId} t={t} accent="text-purple-400"/>
-                  <InfoTile icon={User}  label="Username"   value={`@${profile.username}`} t={t} accent="text-amber-400"/>
+                  <InfoTile icon={Mail}  label="Email"      value={profile.email}              t={t}/>
+                  <InfoTile icon={Hash}  label="Student ID" value={profile.studentId}          t={t} accent="text-purple-400"/>
+                  <InfoTile icon={User}  label="Username"   value={`@${profile.username}`}     t={t} accent="text-amber-400"/>
                 </div>
               </div>
 
-              {/* Academic IDs */}
+              {/* Academic — with resolved names */}
               <div>
-                <p className={`text-[10px] font-black uppercase tracking-widest mb-2 ${t.textMuted}`}>Academic</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                  {[
-                    { icon:Building2,    label:"Campus",   value:`Campus #${profile.campusId}`,   accent:"text-sky-400"    },
-                    { icon:GraduationCap,label:"Faculty",  value:`Faculty #${profile.facultyId}`,  accent:"text-amber-400"  },
-                    { icon:BookOpen,     label:"Program",  value:`Program #${profile.programId}`,  accent:"text-purple-400" },
-                    { icon:Layers,       label:"Batch",    value:`Batch #${profile.batchId}`,      accent:"text-teal-400"   },
-                    { icon:Calendar,     label:"Semester", value:`Semester #${profile.semesterId}`,accent:"text-[#53CBF3]"  },
-                  ].map(f => <InfoTile key={f.label} icon={f.icon} label={f.label} value={f.value} accent={f.accent} t={t}/>)}
+                <div className="flex items-center gap-2 mb-2">
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${t.textMuted}`}>Academic</p>
+                  {loadingNames && (
+                    <div className="flex items-center gap-1 text-[10px] text-[#53CBF3]">
+                      <Loader2 size={10} className="animate-spin"/>
+                      <span>Resolving…</span>
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <InfoTile icon={GraduationCap} label="Faculty"  value={facultyDisplay}  accent="text-amber-400"  loading={loadingNames} t={t}/>
+                  <InfoTile icon={BookOpen}      label="Program"  value={programDisplay}  accent="text-purple-400" loading={loadingNames} t={t}/>
+                  <InfoTile icon={Layers}        label="Batch"    value={batchDisplay}    accent="text-teal-400"   loading={loadingNames} t={t}/>
+                  <InfoTile icon={Calendar}      label="Semester" value={semesterDisplay} accent="text-[#53CBF3]"  loading={loadingNames} t={t}/>
                 </div>
               </div>
 
@@ -242,23 +298,21 @@ export default function ProfilePage() {
               <div>
                 <p className={`text-[10px] font-black uppercase tracking-widest mb-2 ${t.textMuted}`}>System</p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  <InfoTile icon={Hash}  label="User ID"  value={`#${profile.userId}`}  t={t} accent="text-slate-400"/>
-                  <InfoTile icon={ShieldCheck} label="Role ID" value={`Role #${profile.roleId}`} t={t} accent="text-indigo-400"/>
-                  <InfoTile icon={Calendar} label="Joined" value={joinedDate} t={t} accent="text-emerald-400"/>
+                  <InfoTile icon={Hash}        label="User ID" value={`#${profile.userId}`} t={t} accent="text-slate-400"/>
+                  <InfoTile icon={ShieldCheck} label="Role" value="STUDENT" t={t} accent="text-indigo-400"/>
+                  <InfoTile icon={Calendar}    label="Joined"  value={joinedDate} t={t} accent="text-emerald-400"/>
                 </div>
               </div>
             </div>
           )}
 
-          {/* ── Edit mode — only editable fields ── */}
+          {/* ── Edit mode ── */}
           {editing && (
             <div className={`${t.innerBg} rounded-2xl border ${t.innerBorder} p-5`}>
               <p className={`text-xs font-black uppercase tracking-wider mb-4 flex items-center gap-1.5 ${t.textMuted}`}>
                 <Pencil size={12}/> Editing Profile
               </p>
-
               <div className="grid sm:grid-cols-2 gap-4 mb-4">
-                {/* Editable */}
                 <div>
                   <label className={`block text-xs font-semibold mb-1.5 ${t.textSecondary}`}>First Name <span className="text-red-400">*</span></label>
                   <input value={draft.firstName} onChange={e => setDraft(p => ({ ...p, firstName: e.target.value }))} className={inp} placeholder="Rehan"/>
@@ -267,8 +321,6 @@ export default function ProfilePage() {
                   <label className={`block text-xs font-semibold mb-1.5 ${t.textSecondary}`}>Last Name <span className="text-red-400">*</span></label>
                   <input value={draft.lastName} onChange={e => setDraft(p => ({ ...p, lastName: e.target.value }))} className={inp} placeholder="Peter"/>
                 </div>
-
-                {/* Read-only */}
                 {[
                   { label:"Email (read-only)",      val: draft.email      },
                   { label:"Username (read-only)",   val: draft.username   },
@@ -281,16 +333,11 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
-
               <p className={`text-[10px] ${t.textMuted} mb-4`}>
                 Only your name can be updated. Contact an admin to change other details.
               </p>
-
               <div className="flex items-center justify-end gap-2">
-                <button onClick={() => setEditing(false)}
-                  className={`px-4 py-2 rounded-xl border text-sm font-semibold ${t.cardBorder} ${t.textSecondary} hover:opacity-80`}>
-                  Cancel
-                </button>
+                <button onClick={() => setEditing(false)} className={`px-4 py-2 rounded-xl border text-sm font-semibold ${t.cardBorder} ${t.textSecondary} hover:opacity-80`}>Cancel</button>
                 <button onClick={saveEdit} disabled={saving}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#5478FF] text-white text-sm font-semibold hover:bg-[#4060ee] disabled:opacity-60 transition-colors">
                   <Save size={13}/>{saving ? "Saving…" : "Save Changes"}
@@ -304,10 +351,10 @@ export default function ProfilePage() {
       {/* ── Quick actions ── */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon:Key,                 label:"Change Password", sub:"Update your password",        onClick:()=>setModal("password"), color:"text-blue-400 bg-blue-500/10 border-blue-500/20"      },
-          { icon:ShieldCheck,         label:"Set Password",    sub:"Add a new password",          onClick:()=>setModal("addpass"),  color:"text-purple-400 bg-purple-500/10 border-purple-500/20" },
-          { icon:isDark ? Sun : Moon, label:isDark?"Light Mode":"Dark Mode", sub:"Toggle theme",  onClick:toggleTheme,              color:"text-amber-400 bg-amber-500/10 border-amber-500/20"    },
-          { icon:LogOut,              label:"Logout",          sub:"Sign out of the portal",      onClick:()=>{ logout(); navigate("/admin/login",{replace:true}); }, color:"text-red-400 bg-red-500/10 border-red-500/20" },
+          //{ icon:Key,                 label:"Change Password", sub:"Update your password",    onClick:()=>setModal("password"), color:"text-blue-400 bg-blue-500/10 border-blue-500/20"       },
+          //{ icon:ShieldCheck,         label:"Set Password",    sub:"Add a new password",      onClick:()=>setModal("addpass"),  color:"text-purple-400 bg-purple-500/10 border-purple-500/20"  },
+          { icon:isDark ? Sun : Moon, label:isDark?"Light Mode":"Dark Mode", sub:"Toggle theme", onClick:toggleTheme,           color:"text-amber-400 bg-amber-500/10 border-amber-500/20"     },
+          { icon:LogOut,              label:"Logout",          sub:"Sign out of the portal",  onClick:()=>{ logout(); navigate("/admin/login",{replace:true}); }, color:"text-red-400 bg-red-500/10 border-red-500/20" },
         ].map((a, i) => (
           <button key={i} onClick={a.onClick}
             className={`${t.cardBg} rounded-2xl border ${t.cardBorder} p-4 flex items-start gap-3 hover:border-[#5478FF]/40 hover:shadow-sm transition-all text-left`}>
@@ -339,9 +386,7 @@ export default function ProfilePage() {
               <div className="px-6 pb-6 flex gap-3">
                 <button onClick={() => setModal(null)} className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-semibold ${t.cardBorder} ${t.textSecondary} hover:opacity-80`}>Cancel</button>
                 <button onClick={() => { logout(); navigate("/admin/login",{replace:true}); }}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition-colors">
-                  Yes, Delete
-                </button>
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition-colors">Yes, Delete</button>
               </div>
             </div>
           </div>

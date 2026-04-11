@@ -3,9 +3,11 @@ import { ThemeProvider } from "./contexts/ThemeContext.jsx";
 import { AuthProvider } from "./contexts/AuthContext";
 import Login from "./component1/pages/Login.jsx"; // your login page
 import SignUp from "./component1/pages/SignUp.jsx";
+import Verify from "./component1/pages/Verify.jsx";
 import Admin from "./component1/pages/Admin.jsx";
 import StudentPortal from "./component1/pages/StudentPortal/Student.jsx";
 import BatchRepPortal from "./component1/pages/BarchRepPortal/BatchRep.jsx";
+import StudyGroups from "./component3/pages/StudyGroups.jsx";
 function App() {
   // function to check if user is logged in
   const isAuthenticated = () => {
@@ -15,11 +17,12 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-      <Router>
+      <Router >
       <Routes>
         {/* Login route */}
         <Route path="/campusconnect/login" element={<Login />} />
         <Route path="/campusconnect/signup" element={<SignUp />} />
+        <Route path="/campusconnect/verify" element={<Verify />} />
 
         {/* Default route redirects to login */}
         <Route path="*" element={<Navigate to="/campusconnect/login" />} />
@@ -30,6 +33,7 @@ function App() {
          {/* Student rote*/}
         <Route path="/campusconnect/student-dashboard" element={<StudentPortal />} />
         <Route path="/campusconnect/batchrep-dashboard" element={<BatchRepPortal />} />
+        
       </Routes>
     </Router>
      </AuthProvider>

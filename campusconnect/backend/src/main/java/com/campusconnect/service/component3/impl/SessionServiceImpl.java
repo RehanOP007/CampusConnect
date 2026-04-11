@@ -1,9 +1,7 @@
 package com.campusconnect.service.component3.impl;
 
 import com.campusconnect.dto.component3.SessionDtos;
-import com.campusconnect.dto.component3.StudyGroupDtos;
 import com.campusconnect.entity.component1.User;
-import com.campusconnect.entity.component2.Semester;
 import com.campusconnect.entity.component3.Session;
 import com.campusconnect.entity.component3.StudyGroup;
 import com.campusconnect.repository.component1.UserRepository;

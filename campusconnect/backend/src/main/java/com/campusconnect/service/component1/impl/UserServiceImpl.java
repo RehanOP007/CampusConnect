@@ -4,6 +4,7 @@ import com.campusconnect.dto.component1.UserDtos;
 import com.campusconnect.entity.component1.BatchRepRequest;
 import com.campusconnect.entity.component1.Role;
 import com.campusconnect.entity.component1.User;
+import com.campusconnect.entity.component1.VerificationToken;
 import com.campusconnect.entity.component2.Batch;
 import com.campusconnect.entity.component2.Campus;
 import com.campusconnect.entity.component2.Faculty;
@@ -12,12 +13,16 @@ import com.campusconnect.entity.component2.Semester;
 import com.campusconnect.repository.component1.BatchRepRequestRepository;
 import com.campusconnect.repository.component1.RoleRepository;
 import com.campusconnect.repository.component1.UserRepository;
+import com.campusconnect.repository.component1.VerificationTokenRepository;
 import com.campusconnect.repository.component2.BatchRepository;
 import com.campusconnect.repository.component2.CampusRepository;
 import com.campusconnect.repository.component2.FacultyRepository;
 import com.campusconnect.repository.component2.ProgramRepository;
 import com.campusconnect.repository.component2.SemesterRepository;
+import com.campusconnect.service.component1.EmailService;
 import com.campusconnect.service.component1.UserService;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +45,8 @@ public class UserServiceImpl implements UserService {
     private final FacultyRepository facultyRepository;
     private final SemesterRepository semesterRepository;
     private final PasswordEncoder passwordEncoder;
+    private final VerificationTokenRepository verificationTokenRepository;
+    private final EmailService emailService;
 
     @Override
     public UserDtos.Response create(UserDtos.Request request) {
@@ -157,10 +165,21 @@ public class UserServiceImpl implements UserService {
             if (isBatchRep) {
                 user.setStatus("PENDING_APPROVAL");
             } else {
-                user.setStatus("ACTIVE");
+                user.setStatus("PENDING_VERIFICATION");
             }
 
             User savedUser = userRepository.save(user);
+
+            String token = UUID.randomUUID().toString();
+
+            VerificationToken verificationToken = new VerificationToken();
+            verificationToken.setToken(token);
+            verificationToken.setUser(savedUser);
+            verificationToken.setExpiryDate(LocalDateTime.now().plusHours(24));
+
+            verificationTokenRepository.save(verificationToken);
+
+            emailService.sendVerificationEmail(savedUser.getEmail(), token);
 
             // Create BatchRep request
             if (isBatchRep) {
@@ -179,10 +198,29 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
+    public String verifyUser(String token) {
+
+        VerificationToken vToken = verificationTokenRepository.findByToken(token)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token"));
+
+        if (vToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expired");
+        }
+
+        User user = vToken.getUser();
+        user.setStatus("ACTIVE");
+        userRepository.save(user);
+
+        return "Account verified successfully!";
+    }
+        
+    @Override
     public UserDtos.Response update(Long userId, UserDtos.Request request) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        
 
         // ✅ Update only if provided
         if (request.firstName() != null) {
@@ -232,6 +270,21 @@ public class UserServiceImpl implements UserService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Batch not found"));
             user.setBatch(batch);
         }
+        if (request.semesterId() != null) {
+            Semester semester = semesterRepository.findById(request.semesterId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Semester not found"));
+            user.setSemester(semester);
+        }
+        if (request.facultyId() != null) {
+            Faculty faculty = facultyRepository.findById(request.facultyId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Faculty not found"));
+            user.setFaculty(faculty);
+        }
+        if (request.programId() != null) {
+            Program program = programRepository.findById(request.programId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Program not found"));
+            user.setProgram(program);
+        }
 
         return toResponse(userRepository.save(user));
     }
@@ -249,10 +302,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void delete(Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId);
-        }
+         User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+            
+        if (user.getRole() != null &&
+        user.getRole().getRoleName().equalsIgnoreCase("BATCHREP")) {
+
+        batchRepRequestRepository.deleteByUser_UserId(userId);
+    }
+        verificationTokenRepository.deleteByUser_UserId(userId);
         userRepository.deleteById(userId);
     }
 

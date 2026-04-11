@@ -43,5 +43,10 @@ public class UserController {
     public void delete(@RequestParam Long userId) {
         userService.delete(userId);
     }
+
+    @GetMapping("/verify")
+    public String verifyUser(@RequestParam String token) {
+        return userService.verifyUser(token);
+    }
 }
 

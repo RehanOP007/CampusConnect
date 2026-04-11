@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTheme }  from "../../../contexts/ThemeContext";
 import { useAuth }   from "../../../contexts/AuthContext";
 import { T, loadStudentData } from "./StudentData";
+import ResourcesPage from "../../../component2/pages/StudentResourcesPage";
 import {
   getResourcesBySubject,
   createResource,
@@ -11,7 +12,7 @@ import {
 import {
   ArrowLeft, Users, BookOpen, Search, Trash2, FileText,
   X, ChevronLeft, ChevronRight, Plus, Link2, ExternalLink,
-  Pencil, Loader2, AlertTriangle, CheckCircle,
+  Pencil, Loader2, AlertTriangle, CheckCircle,Star
 } from "lucide-react";
 import { data } from "react-router-dom";
 
@@ -40,109 +41,134 @@ const COLORS = [
   "from-[#EC4899] to-[#8B5CF6]", "from-[#14B8A6] to-[#06B6D4]",
 ];
 
-const SubjectCard = ({ subject, index, onClick, t }) => (
-  <div onClick={onClick}
-    className="rounded-2xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-all duration-200 hover:shadow-2xl hover:shadow-black/30">
-    <div className={`h-28 relative bg-gradient-to-br ${COLORS[index % COLORS.length]}`}>
-      <svg className="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id={`p${subject.id}`} x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-            <rect x="5" y="5" width="30" height="30" rx="2" fill="none" stroke="white" strokeWidth="1.5"/>
-            <rect x="12" y="12" width="16" height="16" rx="1" fill="white" fillOpacity="0.3"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill={`url(#p${subject.id})`}/>
-      </svg>
-      <div className="absolute bottom-2 left-3 bg-black/40 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full">
-        {subject.credits} credits
-      </div>
-    </div>
-    <div className={`px-4 py-3 border border-t-0 rounded-b-2xl ${t.cardBg} ${t.cardBorder}`}>
-      <p className={`font-black text-sm truncate ${t.textPrimary}`}>{subject.name}</p>
-      <p className={`text-xs mt-0.5 ${t.textSecondary}`}>{subject.code}</p>
-    </div>
-  </div>
-);
+// Add this import at the top of DashboardPage.jsx
+import { getRatingsByEntity, createOrUpdateRating, deleteRating } from "../../../component2/utils/C2api";
 
-// ─── URL input list ────────────────────────────────────────────────
-const UrlInputList = ({ urls, onChange, t }) => {
-  const add    = () => onChange([...urls, ""]);
-  const remove = (i) => onChange(urls.filter((_, idx) => idx !== i));
-  const edit   = (i, v) => onChange(urls.map((u, idx) => idx === i ? v : u));
+// ── Star Display (inline, small) ──
+const StarRow = ({ ratings }) => {
+  if (!ratings?.length) return (
+    <p className="text-[9px] text-gray-500 mt-1">No ratings</p>
+  );
+  const avg = ratings.reduce((a, r) => a + r.ratingValue, 0) / ratings.length;
   return (
-    <div className="space-y-2">
-      {urls.map((u, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <div className={`flex items-center gap-2 flex-1 border rounded-xl px-3 py-2 ${t.inputBg}`}>
-            <Link2 size={12} className={t.textMuted + " shrink-0"}/>
-            <input value={u} onChange={e => edit(i, e.target.value)}
-              placeholder="https://files.example.com/file.pdf"
-              className="bg-transparent text-sm focus:outline-none flex-1 min-w-0"/>
-          </div>
-          <button onClick={() => remove(i)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10">
-            <X size={13}/>
-          </button>
-        </div>
+    <div className="flex items-center gap-1 mt-1">
+      {[1,2,3,4,5].map(s => (
+        <Star key={s} size={9}
+          className={s <= Math.round(avg) ? "text-yellow-400 fill-yellow-400" : "text-gray-600"}/>
       ))}
-      <button onClick={add}
-        className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors ${t.cardBorder} ${t.textSecondary} hover:opacity-80`}>
-        <Plus size={12}/>Add URL
-      </button>
+      <span className="text-[9px] text-yellow-400 font-bold">{avg.toFixed(1)}</span>
+      <span className="text-[9px] text-gray-500">({ratings.length})</span>
     </div>
   );
 };
 
-// ─── Resource modal (add / edit) ──────────────────────────────────
-const ResourceModal = ({ open, onClose, mode, form, setForm, onSave, saving, t }) => {
-  if (!open) return null;
+// ── Updated SubjectCard ──
+const SubjectCard = ({ subject, index, onClick, t, userId }) => {
+  const [ratings,   setRatings]   = useState([]);
+  const [showRate,  setShowRate]  = useState(false);
+  const [ratingVal, setRatingVal] = useState(0);
+  const [submitting,setSubmitting]= useState(false);
+
+  const myRating = ratings.find(r => r.userId === userId);
+
+  useEffect(() => {
+    getRatingsByEntity("SUBJECT", subject.id)
+      .then(res => setRatings(res?.data ?? []))
+      .catch(() => {});
+  }, [subject.id]);
+
+  useEffect(() => {
+    if (myRating) setRatingVal(myRating.ratingValue);
+  }, [myRating]);
+
+  const handleRate = async (val) => {
+    setRatingVal(val);
+    setSubmitting(true);
+    try {
+      await createOrUpdateRating({
+        userId, entityType: "SUBJECT", entityId: subject.id,
+        ratingValue: val, comment: "",
+      });
+      const res = await getRatingsByEntity("SUBJECT", subject.id);
+      setRatings(res?.data ?? []);
+      setShowRate(false);
+    } catch { /* silent */ }
+    finally { setSubmitting(false); }
+  };
+
+  const handleDeleteRating = async (e) => {
+    e.stopPropagation();
+    if (!myRating) return;
+    try {
+      await deleteRating(myRating.ratingId);
+      const res = await getRatingsByEntity("SUBJECT", subject.id);
+      setRatings(res?.data ?? []);
+      setShowRate(false);
+      setRatingVal(0);
+    } catch { /* silent */ }
+  };
+
   return (
-    <>
-      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={onClose}/>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <div className={`pointer-events-auto w-full max-w-md ${t.cardBg} rounded-2xl border ${t.cardBorder} shadow-2xl overflow-hidden`}>
-          <div className={`flex items-center justify-between px-5 py-4 border-b ${t.divider}`}>
-            <p className={`font-bold text-sm ${t.textPrimary}`}>{mode === "add" ? "Add Resource" : "Edit Resource"}</p>
-            <button onClick={onClose} className={`p-1 rounded-lg ${t.modalClose}`}><X size={15}/></button>
-          </div>
-          <div className="px-5 py-4 space-y-4 max-h-[75vh] overflow-y-auto">
-
-            {/* Name */}
-            <div>
-              <label className={`block text-xs font-semibold mb-1.5 ${t.textSecondary}`}>
-                Resource Name <span className="text-red-400">*</span>
-              </label>
-              <input
-                value={form.name}
-                onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                placeholder="e.g. OOP Lecture Notes – Week 1"
-                className={`w-full p-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5478FF]/40 ${t.inputBg}`}
-              />
-            </div>
-
-            {/* File URLs */}
-            <div>
-              <label className={`block text-xs font-semibold mb-1.5 ${t.textSecondary}`}>File URLs</label>
-              <p className={`text-[10px] mb-2 ${t.textMuted}`}>Paste publicly accessible links to your files.</p>
-              <UrlInputList urls={form.fileUrls} onChange={v => setForm(p => ({ ...p, fileUrls: v }))} t={t}/>
-            </div>
-
-            <div className={`flex justify-end gap-2 pt-2 border-t ${t.divider}`}>
-              <button onClick={onClose} disabled={saving}
-                className={`px-4 py-2 rounded-xl border text-sm font-semibold hover:opacity-80 disabled:opacity-40 ${t.cardBorder} ${t.textSecondary}`}>
-                Cancel
-              </button>
-              <button onClick={onSave} disabled={saving || !form.name.trim()}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5478FF] hover:bg-[#4060ee] disabled:opacity-40 text-white text-sm font-semibold transition-colors">
-                {saving && <Loader2 size={13} className="animate-spin"/>}
-                {mode === "add" ? "Create" : "Save Changes"}
-              </button>
-            </div>
-          </div>
+    <div className="rounded-2xl overflow-hidden cursor-pointer hover:scale-[1.03] transition-all duration-200 hover:shadow-2xl hover:shadow-black/30">
+      {/* Banner — clickable to open resources */}
+      <div onClick={onClick}
+        className={`h-28 relative bg-gradient-to-br ${COLORS[index % COLORS.length]}`}>
+        <svg className="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id={`p${subject.id}`} x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+              <rect x="5" y="5" width="30" height="30" rx="2" fill="none" stroke="white" strokeWidth="1.5"/>
+              <rect x="12" y="12" width="16" height="16" rx="1" fill="white" fillOpacity="0.3"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill={`url(#p${subject.id})`}/>
+        </svg>
+        <div className="absolute bottom-2 left-3 bg-black/40 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full">
+          {subject.credits} credits
         </div>
+        {/* Rate button on banner */}
+        <button
+          onClick={e => { e.stopPropagation(); setShowRate(p => !p); }}
+          className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold transition-all
+            ${myRating
+              ? "bg-yellow-400/90 text-gray-900"
+              : "bg-black/30 text-white hover:bg-black/50"}`}>
+          <Star size={10} className={myRating ? "fill-gray-900" : ""}/>
+          {myRating ? myRating.ratingValue : "Rate"}
+        </button>
       </div>
-    </>
+
+      {/* Card body */}
+      <div className={`px-4 pt-3 pb-2 border border-t-0 rounded-b-2xl ${t.cardBg} ${t.cardBorder}`}>
+        <p onClick={onClick} className={`font-black text-sm truncate ${t.textPrimary}`}>{subject.name}</p>
+        <p className={`text-xs mt-0.5 ${t.textSecondary}`}>{subject.code}</p>
+        <StarRow ratings={ratings}/>
+
+        {/* Inline star picker */}
+        {showRate && (
+          <div className={`mt-2 pt-2 border-t ${t.divider}`} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-1 mb-1">
+              {[1,2,3,4,5].map(s => (
+                <button key={s} onClick={() => handleRate(s)} disabled={submitting}
+                  className="transition-transform hover:scale-125">
+                  <Star size={16}
+                    className={s <= ratingVal ? "text-yellow-400 fill-yellow-400" : "text-gray-500"}/>
+                </button>
+              ))}
+              {submitting && <span className="text-[10px] text-gray-500 ml-1">Saving…</span>}
+            </div>
+            {myRating && (
+              <button onClick={handleDeleteRating}
+                className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1">
+                <Trash2 size={10}/> Remove my rating
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
+
 
 // ─── Delete confirm ────────────────────────────────────────────────
 const DeleteConfirm = ({ open, onCancel, onConfirm, t }) => {
@@ -170,230 +196,7 @@ const DeleteConfirm = ({ open, onCancel, onConfirm, t }) => {
 };
 
 // ─── Resources page ───────────────────────────────────────────────
-function ResourcesPage({ subject, onBack, t, isDark, userId }) {
-  const [resources,   setResources]   = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [search,      setSearch]      = useState("");
-  const [modal,       setModal]       = useState(null);   // null | { mode, resource? }
-  const [form,        setForm]        = useState({ name:"", fileUrls:[""] });
-  const [saving,      setSaving]      = useState(false);
-  const [confirmDel,  setConfirmDel]  = useState(null);  // resourceId
-  const [toast,       setToast]       = useState(null);
 
-  const showToast = (msg, type = "success") => setToast({ msg, type });
-
-  const load = () => {
-    setLoading(true);
-    getResourcesBySubject(subject.id)
-      .then(res => setResources(res?.data ?? []))
-      .catch(() => showToast("Failed to load resources", "error"))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => { load(); }, [subject.id]);
-
-  const filtered = resources.filter(r =>
-    !search || r.name?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // ── Open modals ────────────────────────────────────────────────
-  const openAdd = () => {
-    setForm({ name:"", fileUrls:[""] });
-    setModal({ mode:"add" });
-  };
-  const openEdit = (r) => {
-    setForm({ name: r.name, fileUrls: r.fileUrls?.length ? r.fileUrls : [""] });
-    setModal({ mode:"edit", resource: r });
-  };
-
-  // ── Save ───────────────────────────────────────────────────────
-  const handleSave = async () => {
-    const cleanUrls = form.fileUrls.filter(u => u.trim() !== "");
-    setSaving(true);
-    try {
-      if (modal.mode === "add") {
-        await createResource({
-          name:            form.name.trim(),
-          subjectId:       subject.id,
-          createdByUserId: userId,
-          fileUrls:        cleanUrls,
-        });
-        showToast("Resource created!");
-      } else {
-        await updateResource(modal.resource.resourceId, {
-          name:            form.name.trim(),
-          updatedByUserId: userId,
-          fileUrls:        cleanUrls,
-        });
-        showToast("Resource updated!");
-      }
-      setModal(null);
-      load();
-    } catch (e) {
-      console.log(e);
-      console.log(e?.response);
-      showToast(e?.response?.data?.message ?? "Failed to save resource.", "error");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // ── Delete ─────────────────────────────────────────────────────
-  const handleDelete = async (id) => {
-    try {
-      await deleteResource(id);
-      showToast("Resource deleted.", "info");
-      setResources(p => p.filter(r => r.resourceId !== id));
-    } catch (e) {
-      showToast(e?.response?.data?.message ?? "Failed to delete.", "error");
-    } finally {
-      setConfirmDel(null);
-    }
-  };
-
-  return (
-    <div className={`min-h-full ${t.pageBg} p-6`}>
-      <Toast toast={toast} onClose={() => setToast(null)}/>
-
-      {/* Back */}
-      <button onClick={onBack}
-        className="flex items-center gap-2 mb-5 px-3 py-1.5 rounded-xl border border-[#5478FF]/40 text-[#53CBF3] bg-[#5478FF]/10 hover:bg-[#5478FF]/20 text-sm font-semibold transition-colors">
-        <ArrowLeft size={15}/> Back to Subjects
-      </button>
-
-      {/* Subject header */}
-      <div className={`${t.cardBg} rounded-2xl border ${t.cardBorder} p-5 mb-5 flex items-center gap-4`}>
-        <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${subject.color ?? "from-[#5478FF] to-[#7C3AED]"} flex items-center justify-center text-white font-black text-sm shrink-0`}>
-          {subject.code?.slice(-2)}
-        </div>
-        <div className="flex-1">
-          <h2 className={`font-black text-lg ${t.textPrimary}`}>{subject.name}</h2>
-          <p className={`text-sm ${t.textSecondary}`}>{subject.code} · {filtered.length} resource{filtered.length !== 1 ? "s" : ""}</p>
-        </div>
-        <button onClick={openAdd}
-          className="flex items-center gap-1.5 px-4 py-2 bg-[#5478FF] text-white rounded-xl text-sm font-bold hover:bg-[#4060ee] shadow-sm shadow-[#5478FF]/30 transition-colors">
-          <Plus size={13}/>Add Resource
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="mb-4">
-        <div className={`flex items-center gap-2 border rounded-xl px-3 py-2 max-w-xs ${t.inputBg}`}>
-          <Search size={13} className={t.textMuted + " shrink-0"}/>
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search resources…"
-            className="bg-transparent text-sm focus:outline-none flex-1"/>
-          {search && <button onClick={() => setSearch("")} className={`${t.textMuted} hover:opacity-70`}><X size={11}/></button>}
-        </div>
-      </div>
-
-      {/* Resource list */}
-      {loading ? (
-        <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className={`rounded-2xl border p-4 animate-pulse ${t.cardBg} ${t.cardBorder}`}>
-              <div className="flex items-center gap-3">
-                <div className={`h-10 w-10 rounded-xl ${t.innerBg}`}/>
-                <div className="flex-1 space-y-2">
-                  <div className={`h-3 w-3/5 rounded-full ${t.innerBg}`}/>
-                  <div className={`h-2.5 w-2/5 rounded-full ${t.innerBg}`}/>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className={`${t.cardBg} border ${t.cardBorder} rounded-2xl py-16 text-center`}>
-          <BookOpen size={36} className={`mx-auto mb-3 ${t.textMuted} opacity-30`}/>
-          <p className={`text-sm font-semibold ${t.textMuted}`}>{search ? "No resources match your search" : "No resources yet"}</p>
-          <p className={`text-xs mt-1 ${t.textMuted} opacity-60`}>Click "Add Resource" to create one</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map(r => {
-            const isOwner = r.createdBy === userId;
-            return (
-              <div key={r.resourceId}
-                className={`${t.cardBg} rounded-2xl border ${t.cardBorder} hover:border-[#5478FF]/40 transition-colors overflow-hidden group`}>
-
-                {/* Top row */}
-                <div className="flex items-start gap-3 p-4">
-                  <div className="h-10 w-10 rounded-xl bg-[#5478FF]/15 border border-[#5478FF]/30 flex items-center justify-center shrink-0">
-                    <FileText size={17} className="text-[#5478FF]"/>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-bold text-sm ${t.textPrimary}`}>{r.name}</p>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className={`text-[10px] ${t.textMuted}`}>v{r.version}</span>
-                      {r.createdDate && (
-                        <span className={`text-[10px] ${t.textMuted}`}>
-                          {new Date(r.createdDate).toLocaleDateString()}
-                        </span>
-                      )}
-                      {isOwner && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#5478FF]/15 text-[#53CBF3] border border-[#5478FF]/30">
-                          My Upload
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Edit / Delete — only for owner */}
-                  {isOwner && (
-                    <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(r)}
-                        className="p-1.5 rounded-lg text-sky-400 hover:bg-sky-500/10 transition-colors" title="Edit">
-                        <Pencil size={13}/>
-                      </button>
-                      <button onClick={() => setConfirmDel(r.resourceId)}
-                        className="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors" title="Delete">
-                        <Trash2 size={13}/>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* File URL links */}
-                {r.fileUrls?.length > 0 ? (
-                  <div className={`px-4 pb-4 border-t ${t.divider} pt-3 flex flex-wrap gap-2`}>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider self-center mr-1 ${t.textMuted}`}>Files:</span>
-                    {r.fileUrls.map((url, i) => {
-                      const filename = url.split("/").pop()?.slice(0, 35) || url;
-                      return (
-                        <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[#5478FF]/30 bg-[#5478FF]/10 text-[#53CBF3] text-[11px] font-semibold hover:bg-[#5478FF]/25 hover:border-[#5478FF]/60 transition-colors max-w-xs">
-                          <ExternalLink size={10} className="shrink-0"/>
-                          <span className="truncate">{filename}</span>
-                        </a>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className={`px-4 pb-3 border-t ${t.divider} pt-3`}>
-                    <span className={`text-[10px] italic ${t.textMuted}`}>No files attached</span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Modals */}
-      <ResourceModal
-        open={!!modal} onClose={() => setModal(null)}
-        mode={modal?.mode} form={form} setForm={setForm}
-        onSave={handleSave} saving={saving} t={t}
-      />
-      <DeleteConfirm
-        open={!!confirmDel}
-        onCancel={() => setConfirmDel(null)}
-        onConfirm={() => handleDelete(confirmDel)}
-        t={t}
-      />
-    </div>
-  );
-}
 
 // ─── Study groups placeholder ─────────────────────────────────────
 function StudyGroupsPage({ semester, onBack, t }) {
@@ -530,9 +333,15 @@ export default function DashboardPage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {semester.subjects.map((sub, i) => (
-              <SubjectCard key={sub.id} subject={sub} index={i} t={t}
-                onClick={() => { setSelectedSub(sub); setSubPage("resources"); }}/>
-            ))}
+            <SubjectCard
+              key={sub.id}
+              subject={sub}
+              index={i}
+              t={t}
+              userId={userId}              // ← add this
+              onClick={() => { setSelectedSub(sub); setSubPage("resources"); }}
+            />
+          ))}
           </div>
         )}
       </div>

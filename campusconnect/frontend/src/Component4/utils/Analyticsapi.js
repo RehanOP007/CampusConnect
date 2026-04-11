@@ -66,6 +66,10 @@ export const getPendingBatchRepRequests = ()       => api.get("/api/admin/batchr
 export const approveBatchRepRequest     = (id)     => api.put(`/api/admin/batchrep/approve?requestId=${id}`);
 export const rejectBatchRepRequest      = (id)     => api.put(`/api/admin/batchrep/reject?requestId=${id}`);
 
+export const getResourceRecommendations = (subjectId)        => api.get(`/api/ratings/top-resources-by-subject?subjectId=${subjectId}`);
+export const getSubjectRecommendations = (semesterId)        => api.get(`/api/ratings/top-subjects?semesterId=${semesterId}`);
+
+
 // ── Analytics API object used by AnalyticsDashboard ──────────────
 export const analyticsApi = {
 
@@ -80,7 +84,7 @@ export const analyticsApi = {
       subjectsRes,
       resourcesRes,
       campusRes,
-      batchRepRes
+      batchRepRes,
     ] = await Promise.allSettled([
       getAllUsers(),
       getAllFaculties(),

@@ -30,17 +30,27 @@ const spin = "h-3.5 w-3.5 rounded-full border-2 border-[#5478FF] border-t-transp
 const normalizeId = (id) => id?.toUpperCase().trim();
 
 // ── Sub-components ───────────────────────────────────────────────
-const FieldWrap = ({ label, required, error, children, colSpan }) => (
-  <div className={colSpan === 2 ? "col-span-2" : ""}>
-    <label className="block text-xs font-semibold mb-1.5 opacity-70">
-      {label}{required && <span className="text-red-400 ml-0.5">*</span>}
-    </label>
-    {children}
-    {error && <p className="text-red-400 text-[11px] mt-1 flex items-center gap-1">
-      <span>⚠</span>{error}
-    </p>}
-  </div>
-);
+const FieldWrap = ({ label, required, error, children, colSpan }) => {
+  const { isDark } = useTheme();
+  const theme = isDark ? colors.dark : colors.light;
+
+  return (
+    <div className={colSpan === 2 ? "col-span-2" : ""}>
+      <label className={`block text-xs font-semibold mb-1.5 opacity-70 ${theme.textSecondary}`}>
+        {label}
+        {required && <span className="text-red-400 ml-0.5">*</span>}
+      </label>
+
+      {children}
+
+      {error && (
+        <p className="text-red-400 text-[11px] mt-1 flex items-center gap-1">
+          <span>⚠</span>{error}
+        </p>
+      )}
+    </div>
+  );
+};
 
 const SectionDivider = ({ label, theme }) => (
   <div className="col-span-2 flex items-center gap-3 mt-3 mb-1">
@@ -337,7 +347,7 @@ export default function SignUp() {
                 <SectionDivider label="Account" theme={theme}/>
 
                 <FieldWrap label="Username" required error={errors.username}>
-                  <input name="username" type="text" placeholder="rehan_p" value={form.username} onChange={handleChange} className={inp(!!errors.username)}/>
+                  <input name="username" type="text" placeholder="rehan" value={form.username} onChange={handleChange} className={inp(!!errors.username)}/>
                 </FieldWrap>
 
                 {/* Role */}
@@ -379,7 +389,7 @@ export default function SignUp() {
 
                 {/* Campus — fixed */}
                 <div className="col-span-2">
-                  <label className="block text-xs font-semibold mb-1.5 opacity-70">Campus</label>
+                  <label className={`block text-xs font-semibold mb-1.5 opacity-70 ${theme.text}`}>Campus</label>
                   <div className={`w-full p-3 border rounded-xl text-sm flex items-center gap-2 opacity-60 ${theme.inputBg} ${theme.border}`}>
                     <span className="h-2 w-2 rounded-full bg-[#5478FF] shrink-0"/>
                     <span className={theme.text}>{CAMPUS_LABEL}</span>

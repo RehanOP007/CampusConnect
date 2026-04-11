@@ -41,8 +41,8 @@ const SIDEBAR_GROUPS = [
   { id:"overview",   label:"Overview",   icon:Home,       children:[{ id:"dashboard",    label:"Dashboard",    icon:LayoutDashboard }] },
   { id:"people",     label:"People",     icon:UsersRound, children:[{ id:"users",         label:"Users",         icon:Users },{ id:"batchreps",label:"Batch Reps",icon:UserCheck }] },
   { id:"academic",   label:"Academic",   icon:BookMarked, children:[{ id:"entities",      label:"Entities",      icon:Building2 }] },
-  { id:"operations", label:"Operations", icon:Briefcase,  children:[{ id:"requests",      label:"Requests",      icon:ClipboardList,badge:true },{ id:"notifications",label:"Notifications",icon:Bell }] },
-  { id:"analytics",  label:"Analytics",  icon:BarChart2,  children:[{ id:"reports",       label:"Reports",       icon:BarChart2 },{ id:"settings",label:"Settings",icon:Settings },{ id:"logs",label:"Logs",icon:ScrollText }] },
+  { id:"operations", label:"Operations", icon:Briefcase,  children:[{ id:"requests",      label:"Requests",      icon:ClipboardList,badge:true }] },
+  //{ id:"analytics",  label:"Analytics",  icon:BarChart2,  children:[{ id:"reports",       label:"Reports",       icon:BarChart2 },{ id:"settings",label:"Settings",icon:Settings },{ id:"logs",label:"Logs",icon:ScrollText }] },
 ];
 
 const INITIAL_FACULTIES = ["Computing","Business","Engineering","Humanities"];

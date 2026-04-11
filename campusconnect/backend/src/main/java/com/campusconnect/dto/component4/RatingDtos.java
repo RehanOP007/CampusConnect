@@ -13,7 +13,7 @@ public final class RatingDtos {
     private RatingDtos() {}
 
     public record Request(
-            @NotBlank Rating.RatingType entityType,   // SUBJECT / SESSION / GROUP / RESOURCE
+            @NotNull Rating.RatingType entityType,   // SUBJECT / SESSION / GROUP / RESOURCE
             @NotNull Long entityId,
             @NotNull @Min(1) @Max(5) Integer ratingValue,
             String comment,

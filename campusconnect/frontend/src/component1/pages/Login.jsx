@@ -31,30 +31,28 @@ export default function Login() {
     try {
       const user = await login(username, password);
 
-      // ── Block pending Batch Rep accounts ─────────────────────
-      if (user?.roleId === ROLE_BATCH_REP && user?.status === "PENDING") {
-        // Log them back out so no stale auth remains
-        logout();
+      // ── Block pending Batch Rep ──
+      if (user?.role === "BATCHREP" && user?.status === "PENDING_APPROVAL") {
         setLoading(false);
         setNotification({
           show: true,
           type: "error",
-          message: "Your Batch Representative request is still pending approval. Please wait for an admin to approve your account.",
+          message: "Your Batch Representative request is still pending. Please wait for an admin to approve.",
         });
+        // Delay logout so the notification renders before any state wipe
+        setTimeout(() => logout(), 100);
         return;
       }
 
-      // ── Navigate based on role ────────────────────────────────
+      // ── Success: show briefly then navigate ──
       setLoading(false);
-      setNotification({ show: true, type: "success", message: "Login Successful" });
-
-      setTimeout(() => {
-        if (user?.role) {
-          navigate(getDefaultRoute(user.role), { replace: true });
-        } else {
-          navigate("/campusconnect/admin", { replace: true });
-        }
-      }, 1000);
+      setNotification({
+          show: true,
+          type: "success",
+          message: "Login successful!",
+        });
+      const route = user?.role ? getDefaultRoute(user.role) : "/campusconnect/admin";
+      setTimeout(() => navigate(route, { replace: true }), 800);
 
     } catch (error) {
       console.error(error);
@@ -62,7 +60,7 @@ export default function Login() {
       setNotification({
         show: true,
         type: "error",
-        message: error?.response?.data?.message ?? "Login Failed",
+        message: error?.response?.data?.message ?? "Login failed. Please check your credentials.",
       });
     }
   };
@@ -72,13 +70,6 @@ export default function Login() {
 
       {loading && <Loading loading={loading} message="Loading..."/>}
 
-      <NotificationBanner
-        show={notification.show}
-        type={notification.type}
-        message={notification.message}
-        onClose={() => setNotification({ show: false, type: "", message: "" })}
-      />
-
       <NavBar
         isDark={isDark}
         toggleTheme={toggleTheme}
@@ -87,10 +78,17 @@ export default function Login() {
       />
 
       <div className="flex items-center justify-center min-h-screen pt-16">
+        
         <form
           onSubmit={handleSubmit}
           className={`${theme.cardBg} p-8 rounded-2xl shadow-md w-80 border ${theme.border}`}
         >
+          <NotificationBanner
+            show={notification.show}
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification({ show: false, type: "", message: "" })}
+          />
           <h2 className={`text-2xl font-bold mb-1 text-center ${theme.text}`}>
             Welcome back
           </h2>
