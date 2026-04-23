@@ -47,6 +47,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final VerificationTokenRepository verificationTokenRepository;
     private final EmailService emailService;
+    
 
     @Override
     public UserDtos.Response create(UserDtos.Request request) {
@@ -336,5 +337,7 @@ public class UserServiceImpl implements UserService {
         );
 
     }
+    
 }
+
 
