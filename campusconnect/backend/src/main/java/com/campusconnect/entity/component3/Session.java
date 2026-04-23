@@ -8,6 +8,8 @@ import java.time.LocalTime;
 
 import com.campusconnect.entity.component1.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.campusconnect.entity.component2.Program;
+
 
 @Entity
 @Table(name = "session")
@@ -45,4 +47,13 @@ public class Session {
     @JoinColumn(name = "created_by")
     @JsonIgnore
     private User createdBy;
+
+    @ManyToOne
+    @JoinColumn(name = "program_id")
+    private Program program;
+
+    private int year;
+    private int semester;
+
+
 }
