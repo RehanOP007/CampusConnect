@@ -151,7 +151,7 @@ public class FeedbackServiceImpl implements FeedbackService {
 
     @Override
     public List<FeedbackDtos.Response> getByFaculty(String faculty) {
-        return feedbackRepository.findBySession_Program_Faculty_FacultyName(faculty)
+        return feedbackRepository.findBySession_Program_Faculty_Name(faculty)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -159,7 +159,7 @@ public class FeedbackServiceImpl implements FeedbackService {
 
     @Override
     public List<FeedbackDtos.Response> getByProgram(String program) {
-        return feedbackRepository.findBySession_Program_ProgramName(program)
+        return feedbackRepository.findBySession_Program_Faculty_Name(program)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -167,7 +167,7 @@ public class FeedbackServiceImpl implements FeedbackService {
 
     @Override
     public List<FeedbackDtos.Response> getByProgramAndYear(String program, int year) {
-        return feedbackRepository.findBySession_Program_ProgramNameAndSession_Year(program, year)
+        return feedbackRepository.findBySession_Program_NameAndSession_Year(program, year)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -176,7 +176,7 @@ public class FeedbackServiceImpl implements FeedbackService {
     @Override
     public List<FeedbackDtos.Response> getByProgramYearAndSemester(String program, int year, int semester) {
         return feedbackRepository
-                .findBySession_Program_ProgramNameAndSession_YearAndSession_Semester(program, year, semester)
+                .findBySession_Program_NameAndSession_YearAndSession_Semester(program, year, semester)
                 .stream()
                 .map(this::toResponse)
                 .toList();
