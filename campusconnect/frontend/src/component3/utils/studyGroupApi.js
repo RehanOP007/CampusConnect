@@ -63,3 +63,68 @@ export const getGroupMembers = (groupId) => {
         params: { groupId }
     });
 };
+
+
+// Create Session
+export const createSession = (data) => {
+    return api.post("/api/sessions/create", data);
+};
+
+// Update Session
+export const updateSession = (id, data) => {
+    return api.put("/api/sessions/update", data, {
+        params: { id }
+    });
+};
+
+// Get All Sessions
+export const getAllSessions = () => {
+    return api.get("/api/sessions/all");
+};
+
+// Get Session By ID
+export const getSessionById = (id) => {
+    return api.get("/api/sessions/getById", {
+        params: { id }
+    });
+};
+
+// Get Sessions By Group
+export const getSessionsByGroup = (groupId) => {
+    return api.get("/api/sessions/getByGroup", {
+        params: { groupId }
+    });
+};
+
+// Delete Session
+export const deleteSession = (id) => {
+    return api.delete("/api/sessions/delete", {
+        params: { id }
+    });
+};
+
+// Mark Attendance
+export const markAttendance = (data) => {
+    return api.post("/api/session-attendance/mark", data);
+};
+
+// Remove Attendance
+export const removeAttendance = (sessionId, userId) => {
+    return api.delete("/api/session-attendance/remove", {
+        params: { sessionId, userId }
+    });
+};
+
+// Get By Session
+export const getAttendanceBySession = (sessionId) => {
+    return api.get("/api/session-attendance/getBySession", {
+        params: { sessionId }
+    });
+};
+
+// Get By User
+export const getAttendanceByUser = (userId) => {
+    return api.get("/api/session-attendance/getByUser", {
+        params: { userId }
+    });
+};

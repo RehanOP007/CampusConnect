@@ -90,24 +90,59 @@ export const deleteRating = (id) => {
 // ─── FEEDBACK API — add this block to c1.api.js ────────────────────────────
 // Import this alongside userAPI, bookingAPI, ticketAPI
 
-export const feedbackAPI = {
-  getAll: () =>
-    api.get("/api/feedbacks"),
+// Create Feedback
+export const createFeedback = (data) => {
+    return api.post("/api/feedbacks", data);
+};
 
-  getByFaculty: (facultyName) =>
-    api.get(`/api/feedbacks/faculty/${encodeURIComponent(facultyName)}`),
+// Update Feedback
+export const updateFeedback = (feedbackId, data) => {
+    return api.put(`/api/feedbacks/${feedbackId}`, data);
+};
 
-  getByProgram: (programName) =>
-    api.get(`/api/feedbacks/program/${encodeURIComponent(programName)}`),
+// Delete Feedback
+export const deleteFeedback = (feedbackId) => {
+    return api.delete(`/api/feedbacks/${feedbackId}`);
+};
 
-  getByProgramAndYear: (programName, year) =>
-    api.get(`/api/feedbacks/program/${encodeURIComponent(programName)}/year/${year}`),
+// Get Feedback by ID
+export const getFeedbackById = (feedbackId) => {
+    return api.get(`/api/feedbacks/${feedbackId}`);
+};
 
-  getByProgramYearSemester: (programName, year, semester) =>
-    api.get(`/api/feedbacks/program/${encodeURIComponent(programName)}/year/${year}/semester/${semester}`),
+// Get Feedback by User
+export const getFeedbackByUser = (userId) => {
+    return api.get(`/api/feedbacks/user/${userId}`);
+};
 
-  getById: (feedbackId) =>
-    api.get(`/api/feedbacks/${feedbackId}`),
+// Get Feedback by Session
+export const getFeedbackBySession = (sessionId) => {
+    return api.get(`/api/feedbacks/session/${sessionId}`);
+};
+
+// Get All Feedbacks (ADMIN)
+export const getAllFeedbacks = () => {
+    return api.get("/api/feedbacks");
+};
+
+// Filter by Faculty
+export const getFeedbackByFaculty = (faculty) => {
+    return api.get(`/api/feedbacks/faculty/${faculty}`);
+};
+
+// Filter by Program
+export const getFeedbackByProgram = (program) => {
+    return api.get(`/api/feedbacks/program/${program}`);
+};
+
+// Filter by Program + Year
+export const getFeedbackByProgramYear = (program, year) => {
+    return api.get(`/api/feedbacks/program/${program}/year/${year}`);
+};
+
+// Filter by Program + Year + Semester
+export const getFeedbackByProgramYearSemester = (program, year, semester) => {
+    return api.get(`/api/feedbacks/program/${program}/year/${year}/semester/${semester}`);
 };
 
 

@@ -4,11 +4,14 @@ import com.campusconnect.dto.component3.StudyGroupDtos;
 import com.campusconnect.entity.component1.User;
 import com.campusconnect.entity.component2.Semester;
 import com.campusconnect.entity.component2.Subject;
+import com.campusconnect.entity.component3.GroupMember;
+import com.campusconnect.entity.component3.GroupMemberId;
 import com.campusconnect.entity.component3.StudyGroup;
 import com.campusconnect.repository.component1.UserRepository;
 import com.campusconnect.repository.component2.SemesterRepository;
 import com.campusconnect.repository.component2.SubjectRepository;
 import com.campusconnect.repository.component3.StudyGroupRepository;
+import com.campusconnect.repository.component3.GroupMemberRepository;
 import com.campusconnect.service.component3.StudyGroupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,26 +28,20 @@ public class StudyGroupServiceImpl implements StudyGroupService {
     private final SubjectRepository subjectRepository;
     private final SemesterRepository semesterRepository;
     private final UserRepository userRepository;
+    private final GroupMemberRepository groupMemberRepository;
+    
 
     @Override
     public StudyGroupDtos.Response create(StudyGroupDtos.Request request) {
+
         Subject subject = subjectRepository.findById(request.subjectId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Subject not found: " + request.subjectId()));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Subject not found"));
 
         Semester semester = semesterRepository.findById(request.semesterId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Semester not found: " + request.semesterId()));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Semester not found"));
 
         User createdBy = userRepository.findById(request.createdByUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + request.createdByUserId()));
-        
-        if (createdBy.getRole() != null &&
-                "STUDENT".equalsIgnoreCase(createdBy.getRole().getRoleName())) {
-
-                throw new ResponseStatusException(
-                        HttpStatus.FORBIDDEN,
-                        "Access Denied: Students cannot create study groups"
-                );
-        } 
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         StudyGroup group = new StudyGroup();
         group.setGroupName(request.groupName());
@@ -53,8 +50,25 @@ public class StudyGroupServiceImpl implements StudyGroupService {
         group.setSubject(subject);
         group.setSemester(semester);
         group.setCreatedBy(createdBy);
-        return toResponse(studyGroupRepository.save(group));
-    }
+
+        StudyGroup savedGroup = studyGroupRepository.save(group);
+
+        //AUTO JOIN CREATOR
+        GroupMemberId id = new GroupMemberId(
+                savedGroup.getGroupId(),
+                createdBy.getUserId()
+        );
+
+        GroupMember member = new GroupMember();
+        member.setId(id);
+        member.setStudyGroup(savedGroup);
+        member.setUser(createdBy);
+        member.setJoinedAt(LocalDateTime.now());
+
+        groupMemberRepository.save(member);
+
+        return toResponse(savedGroup);
+   }
 
     @Override
     public StudyGroupDtos.Response update(Long groupId, StudyGroupDtos.Request request) {

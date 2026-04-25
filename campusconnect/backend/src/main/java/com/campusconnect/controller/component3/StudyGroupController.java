@@ -18,14 +18,14 @@ public class StudyGroupController {
     private final StudyGroupService studyGroupService;
 
     // Create group
-    @PreAuthorize("hasAnyRole('ADMIN','BATCHREP')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','BATCHREP')")
     @PostMapping("/create")
     public StudyGroupDtos.Response create(@Valid @RequestBody StudyGroupDtos.Request request) {
         return studyGroupService.create(request);
     }
 
     // Update group
-    @PreAuthorize("hasAnyRole('ADMIN','BATCHREP')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','BATCHREP')")
     @PutMapping("/update")
     public StudyGroupDtos.Response update(@RequestParam Long id,
                                           @Valid @RequestBody StudyGroupDtos.Request request) {
@@ -50,7 +50,7 @@ public class StudyGroupController {
     }
 
     // Delete group
-    @PreAuthorize("hasAnyRole('ADMIN','BATCHREP')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','BATCHREP')")
     @DeleteMapping("/delete")
     public void delete(@RequestParam Long id) {
         studyGroupService.delete(id);

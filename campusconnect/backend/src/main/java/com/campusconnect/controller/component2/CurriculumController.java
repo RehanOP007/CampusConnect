@@ -16,7 +16,7 @@ import java.util.List;
 public class CurriculumController {
     private final CurriculumService curriculumService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping("/create")
     public CurriculumDtos.Response create(@Valid @RequestBody CurriculumDtos.Request request) {
         return curriculumService.create(request);

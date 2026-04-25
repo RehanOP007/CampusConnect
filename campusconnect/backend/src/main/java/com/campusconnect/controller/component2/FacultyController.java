@@ -5,6 +5,8 @@ import com.campusconnect.service.component2.FacultyService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,11 +18,13 @@ public class FacultyController {
 
     private final FacultyService facultyService;
 
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping("/create")
     public FacultyDtos.Response create(@Valid @RequestBody FacultyDtos.Request request) {
         return facultyService.create(request);
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("/update")
     public FacultyDtos.Response update(
             @RequestParam Long id,
@@ -44,6 +48,7 @@ public class FacultyController {
         return facultyService.getAll();
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @DeleteMapping("/delete")
     public void delete(@RequestParam Long id) {
         facultyService.delete(id);

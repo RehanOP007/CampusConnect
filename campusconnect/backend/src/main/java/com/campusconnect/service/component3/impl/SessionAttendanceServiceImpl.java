@@ -42,7 +42,7 @@ public class SessionAttendanceServiceImpl implements SessionAttendanceService {
         attendance.setId(id);
         attendance.setSession(session);
         attendance.setUser(user);
-        attendance.setAttendanceStatus(request.attendanceStatus());
+        attendance.setAttendanceStatus("PRESENT");
 
         return toResponse(repository.save(attendance));
     }

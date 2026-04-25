@@ -22,14 +22,14 @@ public class FeedbackController {
     // ===========================
 
     // Create feedback
-    @PreAuthorize("hasAnyAuthority('STUDENT','BATCH_REP')")
+    @PreAuthorize("hasAnyAuthority('STUDENT','BATCHREP')")
     @PostMapping
     public FeedbackDtos.Response create(@Valid @RequestBody FeedbackDtos.Request request) {
         return feedbackService.create(request);
     }
 
     // Update feedback (own only handled in service)
-    @PreAuthorize("hasAnyAuthority('STUDENT','BATCH_REP')")
+    @PreAuthorize("hasAnyAuthority('STUDENT','BATCHREP')")
     @PutMapping("/{feedbackId}")
     public FeedbackDtos.Response update(@PathVariable Long feedbackId,
                                         @RequestBody FeedbackDtos.Request request) {
@@ -37,14 +37,14 @@ public class FeedbackController {
     }
 
     // Delete feedback (own only handled in service)
-    @PreAuthorize("hasAnyAuthority('STUDENT','BATCH_REP')")
+    @PreAuthorize("hasAnyAuthority('STUDENT','BATCHREP')")
     @DeleteMapping("/{feedbackId}")
     public void delete(@PathVariable Long feedbackId) {
         feedbackService.delete(feedbackId);
     }
 
     // View own feedbacks
-    @PreAuthorize("hasAnyAuthority('STUDENT','BATCH_REP','ADMIN')")
+    @PreAuthorize("hasAnyAuthority('STUDENT','BATCHREP','ADMIN')")
     @GetMapping("/user/{userId}")
     public List<FeedbackDtos.Response> getByUser(@PathVariable Long userId) {
         return feedbackService.getByUserId(userId);

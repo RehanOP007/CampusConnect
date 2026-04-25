@@ -3,6 +3,7 @@ import { useTheme }  from "../../../contexts/ThemeContext";
 import { useAuth }   from "../../../contexts/AuthContext";
 import { T, loadStudentData } from "./StudentData";
 import ResourcesPage from "../../../component2/pages/StudentResourcesPage";
+import StudyGroups from "../../../component3/pages/StudyGroups";
 import {
   getResourcesBySubject,
   createResource,
@@ -199,21 +200,7 @@ const DeleteConfirm = ({ open, onCancel, onConfirm, t }) => {
 
 
 // ─── Study groups placeholder ─────────────────────────────────────
-function StudyGroupsPage({ semester, onBack, t }) {
-  return (
-    <div className={`min-h-full ${t.pageBg} p-6`}>
-      <button onClick={onBack}
-        className="flex items-center gap-2 mb-5 px-3 py-1.5 rounded-xl border border-[#5478FF]/40 text-[#53CBF3] bg-[#5478FF]/10 hover:bg-[#5478FF]/20 text-sm font-semibold">
-        <ArrowLeft size={15}/> Back
-      </button>
-      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <Users size={64} className={`${t.textMuted} opacity-30`}/>
-        <p className={`font-black text-xl ${t.textPrimary} opacity-40`}>Study Groups</p>
-        <p className={`text-sm ${t.textMuted} opacity-50`}>Study groups for {semester?.label} — coming soon</p>
-      </div>
-    </div>
-  );
-}
+
 
 // ═══════════════════════════════════════════════════════════════════
 export default function DashboardPage() {
@@ -245,7 +232,7 @@ export default function DashboardPage() {
   const goRight  = () => setSemIndex(i => Math.min(semesters.length - 1, i + 1));
 
   if (subPage === "studygroups")
-    return <StudyGroupsPage semester={semester} onBack={() => setSubPage("main")} t={t}/>;
+    return <StudyGroups onBack={() => setSubPage("main")} semesterId={semester?.id} />;
 
   if (subPage === "resources" && selectedSub)
     return (

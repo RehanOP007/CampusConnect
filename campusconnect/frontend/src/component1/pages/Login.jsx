@@ -51,7 +51,7 @@ export default function Login() {
           type: "success",
           message: "Login successful!",
         });
-      const route = user?.role ? getDefaultRoute(user.role) : "/campusconnect/admin";
+      const route = user?.role ? getDefaultRoute(user.role) : "/";
       setTimeout(() => navigate(route, { replace: true }), 800);
 
     } catch (error) {

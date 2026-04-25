@@ -17,13 +17,13 @@ import java.util.List;
 public class SubjectController {
     private final SubjectService subjectService;
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'BATCH_REP')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','BATCHREP')")
     @PostMapping("/create")
     public SubjectDtos.Response create(@Valid @RequestBody SubjectDtos.Request request) {
         return subjectService.create(request);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'BATCH_REP')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','BATCHREP')")
     @PutMapping("/update")
     public SubjectDtos.Response update(@RequestParam Long subjectId, @Valid @RequestBody SubjectDtos.Request request) {
         return subjectService.update(subjectId, request);
@@ -44,7 +44,7 @@ public class SubjectController {
         return subjectService.getAll();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'BATCH_REP')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','BATCHREP')")
     @DeleteMapping("/delete")
     public void delete(@RequestParam Long subjectId) {
         subjectService.delete(subjectId);

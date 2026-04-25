@@ -17,14 +17,14 @@ public class SessionController {
     private final SessionService sessionService;
 
     // ✅ Create session
-    @PreAuthorize("hasAnyRole('ADMIN','BATCH_REP')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','BATCHREP')")
     @PostMapping("/create")
     public SessionDtos.Response create(@RequestBody SessionDtos.Request request) {
         return sessionService.create(request);
     }
 
     // ✅ Update session
-    @PreAuthorize("hasAnyRole('ADMIN','BATCH_REP')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','BATCHREP')")
     @PutMapping("/update")
     public SessionDtos.Response update(@RequestParam Long id,
                                        @RequestBody SessionDtos.Request request) {
@@ -50,7 +50,7 @@ public class SessionController {
     }
 
     // ✅ Delete session
-    @PreAuthorize("hasAnyRole('ADMIN','BATCH_REP')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','BATCHREP')")
     @DeleteMapping("/delete")
     public void delete(@RequestParam Long id) {
         sessionService.delete(id);

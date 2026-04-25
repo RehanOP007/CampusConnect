@@ -42,7 +42,8 @@ const NavBar = ({ isDark, toggleTheme, activeSection, setActiveSection }) => {
               <span className="text-white font-bold">Cc</span>
             </div>
             <span
-              className={`text-xl font-bold bg-gradient-to-r ${theme.gradientPrimary} bg-clip-text text-transparent`}
+              className={`text-xl font-bold bg-gradient-to-r ${theme.gradientPrimary} bg-clip-text text-transparent cursor-pointer`}
+              onClick={()=> navigate("/")}
             >
               CampusConnect
             </span>

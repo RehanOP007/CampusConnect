@@ -17,13 +17,13 @@ public class ProgramController {
 
     private final ProgramService programService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping("/create")
     public ProgramDtos.Response create(@Valid @RequestBody ProgramDtos.Request request) {
         return programService.create(request);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("/update")
     public ProgramDtos.Response update(
             @RequestParam Long programId,
@@ -48,7 +48,7 @@ public class ProgramController {
     }
 
     // changed here
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @DeleteMapping("/delete")
     public void delete(@RequestParam Long programId) {
         programService.delete(programId);
