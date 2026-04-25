@@ -1,3 +1,4 @@
+// Component 4: Session Analytics - Tracks study sessions and peak activity times
 import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { colors } from '../../contexts/ColorContext';
