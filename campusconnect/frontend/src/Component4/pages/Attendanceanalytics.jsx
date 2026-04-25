@@ -1,3 +1,4 @@
+// Component 4: Attendance Analytics - Tracks student attendance rates and trends
 import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { colors } from '../../contexts/ColorContext';
