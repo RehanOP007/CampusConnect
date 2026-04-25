@@ -1,3 +1,4 @@
+// Component 4: Overview Cards - Shows key metrics summary (students, faculties, programs, batches)
 import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { colors } from '../../contexts/ColorContext';
