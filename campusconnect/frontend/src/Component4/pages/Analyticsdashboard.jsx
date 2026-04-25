@@ -1,3 +1,4 @@
+// Component 4: Main Analytics Dashboard - Displays system overview
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { colors } from '../../contexts/ColorContext';
