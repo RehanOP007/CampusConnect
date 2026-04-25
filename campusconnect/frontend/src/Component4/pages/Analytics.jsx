@@ -13,4 +13,6 @@ const Analytics = () => {
 
 export default Analytics;
 
-// Component 4: Analytics Dashboard - Developed by [Your Name]
+
+// Component 4: Analytics Page - Wrapper component for Analytics Dashboard
+// Component 4: Analytics Dashboard - Developed by [Yo
