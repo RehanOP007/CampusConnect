@@ -1,3 +1,4 @@
+// Component 4: Batch Rep Requests - Manages pending batch representative approvals
 import React, { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { colors } from '../../contexts/ColorContext';
