@@ -1,3 +1,4 @@
+// Component 4: Faculty Statistics - Displays faculty-wise program and student counts
 import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { colors } from '../../contexts/ColorContext';
