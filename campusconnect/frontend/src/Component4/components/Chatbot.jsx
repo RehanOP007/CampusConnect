@@ -140,3 +140,12 @@ const Chatbot = () => {
 };
 
 export default Chatbot;
+
+// Find and change something like:
+// Change "CampusConnect Assistant" to "🤖 CampusConnect Assistant"
+
+// ============================================
+// Component 4: AI Assistant Chatbot
+// Developed by: kavindu
+// Description: Interactive chatbot for user guidance
+// ============================================

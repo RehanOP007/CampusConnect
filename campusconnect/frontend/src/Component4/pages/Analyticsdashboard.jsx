@@ -149,3 +149,6 @@ const AnalyticsDashboard = () => {
 };
 
 export default AnalyticsDashboard;
+
+// Author: [Your Name] - Component 4 Developer
+

@@ -12,3 +12,5 @@ const Analytics = () => {
 };
 
 export default Analytics;
+
+// Component 4: Analytics Dashboard - Developed by [Your Name]

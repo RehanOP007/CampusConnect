@@ -397,3 +397,11 @@ export default function Recommendations() {
     </>
   );
 }
+
+// Component 4: Recommendations Page - Displays program suggestions based on user interests
+
+// ============================================
+// Component 4: Recommendations Page
+// Developed by: [Your Name]  
+// Description: Displays personalized program recommendations
+// ============================================

@@ -141,3 +141,5 @@ const BatchRepRequests = ({ data }) => {
 };
 
 export default BatchRepRequests;
+
+// Component 4: Batch Statistics - Displays batch-wise student metrics

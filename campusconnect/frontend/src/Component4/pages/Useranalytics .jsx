@@ -114,3 +114,5 @@ const UserAnalytics = ({ data }) => {
 };
 
 export default UserAnalytics;
+
+// Component 4: User Analytics - Shows user registration trends and role distribution

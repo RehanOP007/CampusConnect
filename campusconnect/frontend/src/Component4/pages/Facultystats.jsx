@@ -57,3 +57,6 @@ const FacultyStats = ({ data }) => {
 };
 
 export default FacultyStats;
+
+
+//component 4 : faculty stats - developed by kavindu
