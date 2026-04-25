@@ -1,3 +1,4 @@
+// Component 4: Batch Statistics - Displays student count and rep distribution
 import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { colors } from '../../contexts/ColorContext';
