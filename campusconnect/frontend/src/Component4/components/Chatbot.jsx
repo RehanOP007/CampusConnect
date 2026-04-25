@@ -1,3 +1,4 @@
+// Component 4: AI Chatbot Assistant - Provides user guidance and help
 import React, { useState, useRef, useEffect } from 'react';
 
 const Chatbot = () => {
