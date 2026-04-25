@@ -1,3 +1,4 @@
+//// Component 4: Recommendations Page - Shows program suggestions based on match scores
 import { useState, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth }  from "../../contexts/AuthContext";
